@@ -2,3 +2,7 @@ dist/
 node_modules/
 tsconfig.tsbuildinfo
 .playwright-cli/
+.superpowers/
+AGENTS.md
+docs/reviews/
+docs/plan/
