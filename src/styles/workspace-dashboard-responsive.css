@@ -1,0 +1,153 @@
+.workspace-card--dashboard-widget {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: visible;
+}
+
+.dashboard-widget__body,
+.dashboard-widget__kanban {
+  min-height: 0;
+}
+
+.dashboard-widget__body {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.dashboard-widget__metrics {
+  min-height: 0;
+  align-content: start;
+}
+
+.dashboard-widget__metrics--compact {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.dashboard-widget__metrics--wide {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-widget__metrics--hero {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.workspace-card--dashboard-widget[data-dashboard-profile="compact"] .summary-chip,
+.workspace-card--dashboard-widget[data-dashboard-profile="tall"] .summary-chip {
+  padding: 16px 18px;
+  border-radius: 20px;
+}
+
+.workspace-card--dashboard-widget[data-dashboard-profile="compact"] .summary-chip strong,
+.workspace-card--dashboard-widget[data-dashboard-profile="tall"] .summary-chip strong {
+  font-size: 22px;
+}
+
+.workspace-card--dashboard-widget[data-dashboard-profile="wide"] .summary-chip strong {
+  font-size: 26px;
+}
+
+.workspace-card--dashboard-widget[data-dashboard-profile="hero"] .summary-chip strong {
+  font-size: 32px;
+}
+
+.dashboard-chart {
+  min-height: 0;
+}
+
+.dashboard-chart--layout-compact {
+  gap: 8px;
+}
+
+.dashboard-chart--layout-hero {
+  gap: 16px;
+}
+
+.dashboard-chart--layout-compact .dashboard-bar {
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.dashboard-chart--layout-compact .dashboard-bar__label {
+  white-space: normal;
+}
+
+.dashboard-chart--layout-hero .dashboard-bar {
+  grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.dashboard-chart--layout-compact .dashboard-bar__track,
+.dashboard-chart--layout-compact .dashboard-bar__fill {
+  min-height: 12px;
+}
+
+.dashboard-chart--layout-hero .dashboard-bar__track,
+.dashboard-chart--layout-hero .dashboard-bar__fill {
+  min-height: 18px;
+}
+
+.dashboard-chart--layout-compact .dashboard-pie-shell {
+  width: min(100%, 132px);
+}
+
+.dashboard-chart--layout-wide .dashboard-pie-shell {
+  width: min(100%, 176px);
+}
+
+.dashboard-chart--layout-hero .dashboard-pie-shell {
+  width: min(100%, 228px);
+}
+
+.dashboard-chart--layout-compact .dashboard-pie__center span {
+  font-size: 11px;
+}
+
+.dashboard-chart--layout-compact .dashboard-pie__center strong {
+  font-size: 14px;
+}
+
+.dashboard-chart--layout-hero .dashboard-pie__center strong {
+  font-size: 20px;
+}
+
+.dashboard-widget__kanban {
+  overflow: auto;
+}
+
+.workspace-card--dashboard-widget[data-dashboard-profile="compact"] .dashboard-widget__kanban .reference-board__track,
+.workspace-card--dashboard-widget[data-dashboard-profile="tall"] .dashboard-widget__kanban .reference-board__track {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 0;
+}
+
+.workspace-card--dashboard-widget[data-dashboard-profile="compact"] .dashboard-widget__kanban .reference-board__column,
+.workspace-card--dashboard-widget[data-dashboard-profile="tall"] .dashboard-widget__kanban .reference-board__column {
+  flex-basis: auto;
+  gap: 10px;
+  padding: 12px;
+}
+
+.workspace-card--dashboard-widget[data-dashboard-profile="compact"] .dashboard-widget__kanban .reference-board__card,
+.workspace-card--dashboard-widget[data-dashboard-profile="tall"] .dashboard-widget__kanban .reference-board__card {
+  gap: 8px;
+  padding: 12px;
+}
+
+.workspace-card--dashboard-widget[data-dashboard-profile="compact"] .dashboard-widget__kanban .reference-board__meta,
+.workspace-card--dashboard-widget[data-dashboard-profile="tall"] .dashboard-widget__kanban .reference-board__meta {
+  grid-template-columns: 1fr;
+}
+
+.workspace-card--dashboard-widget[data-dashboard-profile="hero"] .dashboard-widget__kanban .reference-board__track {
+  gap: 18px;
+  padding: 2px 0 0;
+}
+
+.workspace-card--dashboard-widget[data-dashboard-profile="hero"] .dashboard-widget__kanban .reference-board__column {
+  gap: 16px;
+}

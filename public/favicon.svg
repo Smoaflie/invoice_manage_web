@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="ledgerGlow" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#1cc7ff" />
+      <stop offset="100%" stop-color="#ffb04f" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="#0f131b" />
+  <path d="M18 18h18a8 8 0 0 1 8 8v20H26a8 8 0 0 1-8-8V18Z" fill="url(#ledgerGlow)" opacity="0.95" />
+  <path d="M26 22h20v24H30a4 4 0 0 1-4-4V22Z" fill="#fffaf2" opacity="0.95" />
+  <path d="M30 28h12M30 34h12M30 40h8" fill="none" stroke="#13263a" stroke-linecap="round" stroke-width="3" />
+  <circle cx="18" cy="50" r="5" fill="#1cc7ff" />
+</svg>

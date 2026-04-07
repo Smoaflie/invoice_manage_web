@@ -1,0 +1,113 @@
+.workspace-cell-menu__panel {
+  position: fixed;
+  z-index: 40;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  max-height: min(360px, calc(100vh - 32px));
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+}
+
+.workspace-cell-menu__table {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  color: #111827;
+  font-size: 12px;
+}
+
+.workspace-cell-menu__head {
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.workspace-cell-menu__body {
+  overflow: auto;
+}
+
+.workspace-cell-menu__row {
+  display: grid;
+}
+
+.workspace-cell-menu__row--head {
+  background: #f8fafc;
+}
+
+.workspace-cell-menu__header,
+.workspace-cell-menu__cell {
+  min-width: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.workspace-cell-menu__header {
+  color: #475569;
+  font-weight: 600;
+}
+
+.workspace-cell-menu__header--resizable {
+  position: relative;
+  padding-right: 12px;
+}
+
+.workspace-cell-menu__text-value,
+.workspace-cell-menu__text-trigger {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font: inherit;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-align: left;
+  text-overflow: ellipsis;
+}
+
+.workspace-cell-menu__text-trigger {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.workspace-cell-menu__text-trigger:hover,
+.workspace-cell-menu__text-trigger:focus {
+  background: transparent;
+  outline: none;
+}
+
+.workspace-cell-menu__detail-panel {
+  position: fixed;
+  z-index: 50;
+  min-height: 88px;
+  max-height: min(320px, calc(100vh - 32px));
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+  color: #111827;
+  font: inherit;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow: auto;
+  resize: none;
+}
+
+.workspace-cell-menu__detail-panel:hover,
+.workspace-cell-menu__detail-panel:focus {
+  background: #fff;
+  outline: none;
+}
+
+.workspace-cell-menu__body .workspace-cell-menu__row:last-child .workspace-cell-menu__cell {
+  border-bottom: 0;
+}

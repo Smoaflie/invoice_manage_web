@@ -1,0 +1,230 @@
+.workspace-status--dashboard,
+.workspace-status--files,
+.workspace-status--settings {
+  padding: 14px 18px;
+  border: 1px solid var(--panel-border);
+  box-shadow: none;
+}
+
+.overview-kpis--dashboard {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) repeat(2, minmax(0, 0.85fr));
+  gap: 16px;
+}
+
+.stat-card--primary {
+  background: linear-gradient(180deg, #ffffff 0%, #fbf9ff 100%);
+}
+
+.workspace-card--activity .workspace-card__header,
+.workspace-card--utility .workspace-card__header,
+.workspace-card--settings-info .workspace-card__header,
+.workspace-card--settings-form .workspace-card__header {
+  margin-bottom: 18px;
+}
+
+.workspace-card__copy,
+.utility-panel__copy,
+.utility-panel__status,
+.settings-form__copy,
+.settings-form__status {
+  line-height: 1.6;
+}
+
+.workspace-card__copy {
+  max-width: 58ch;
+}
+
+.workspace-card--activity .activity-list li {
+  align-items: center;
+  min-height: 64px;
+}
+
+.workspace-page--files .summary-strip {
+  gap: 12px;
+}
+
+.workspace-grid--files {
+  grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
+  gap: 18px;
+}
+
+.workspace-card--utility {
+  min-height: 100%;
+}
+
+.workspace-card--table .data-table {
+  margin-top: 4px;
+}
+
+.workspace-card--ledger .workspace-card__header {
+  margin-bottom: 12px;
+}
+
+.workspace-card--ledger .workspace-card__meta {
+  max-width: 320px;
+  gap: 8px;
+}
+
+.workspace-card--ledger .toolbar-row {
+  margin-bottom: 12px;
+  padding-top: 4px;
+}
+
+.workspace-card--ledger .toolbar-field {
+  min-width: min(380px, 100%);
+}
+
+.workspace-card--ledger .filter-tabs {
+  justify-content: flex-end;
+}
+
+.utility-panel__status,
+.settings-form__status {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--panel-muted);
+}
+
+.workspace-grid--settings {
+  grid-template-columns: minmax(320px, 0.92fr) minmax(420px, 1.08fr);
+  gap: 18px;
+}
+
+.workspace-grid--settings-modules {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.workspace-card--settings-info .bridge-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--panel-muted);
+}
+
+.workspace-card--settings-form .settings-form {
+  gap: 16px;
+}
+
+.workspace-card--settings-form .settings-form__fields {
+  gap: 16px;
+}
+
+.workspace-card--settings-form .settings-form label:last-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.workspace-card--settings-form .settings-form input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.settings-status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.settings-status-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(13, 30, 54, 0.08);
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.settings-status-card .workspace-card__header {
+  margin-bottom: 0;
+}
+
+.settings-status-card .workspace-card__eyebrow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.status-pill--neutral {
+  background: rgba(119, 115, 145, 0.12);
+  color: var(--text-muted);
+}
+
+.status-pill--success {
+  background: rgba(136, 193, 73, 0.14);
+  color: #5f8d2e;
+}
+
+.status-pill--warning {
+  background: rgba(242, 153, 74, 0.16);
+  color: #b56a20;
+}
+
+.status-pill--danger {
+  background: rgba(239, 90, 112, 0.14);
+  color: #cc455c;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stat-card,
+  .workspace-card,
+  .workspace-status {
+    animation: surface-enter 280ms ease both;
+  }
+
+  .stat-card:nth-child(2),
+  .workspace-card:nth-child(2) {
+    animation-delay: 40ms;
+  }
+
+  .stat-card:nth-child(3),
+  .workspace-card:nth-child(3) {
+    animation-delay: 80ms;
+  }
+
+  .stat-card:nth-child(4),
+  .workspace-card:nth-child(4) {
+    animation-delay: 120ms;
+  }
+}
+
+@keyframes surface-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1180px) {
+  .overview-kpis--dashboard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workspace-grid--files,
+  .workspace-grid--settings,
+  .workspace-grid--settings-modules,
+  .settings-status-grid,
+  .overview-grid--dashboard {
+    grid-template-columns: 1fr;
+  }
+
+}

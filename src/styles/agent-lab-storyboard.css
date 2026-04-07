@@ -1,0 +1,189 @@
+.agent-lab__storyboard {
+  display: block;
+}
+
+.agent-lab__workspace-shell {
+  position: relative;
+  padding: 18px;
+  border-radius: 32px;
+}
+
+.agent-lab__workspace-banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--agent-lab-line);
+}
+
+.agent-lab__role-switcher {
+  display: inline-flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(20, 33, 61, 0.06);
+}
+
+.agent-lab__role-button {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: inherit;
+}
+
+.agent-lab__role-button--active {
+  background: var(--agent-lab-ink);
+  color: white;
+}
+
+.agent-lab__toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.agent-lab__toolbar-group {
+  padding: 14px;
+  border-radius: 20px;
+  background: white;
+  border: 1px solid rgba(20, 33, 61, 0.08);
+}
+
+.agent-lab__toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.agent-lab__toolbar-button {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--agent-lab-line);
+  background: #fff;
+  color: inherit;
+}
+
+.agent-lab__toolbar-button--primary {
+  background: var(--agent-lab-ink);
+  color: white;
+}
+
+.agent-lab__workspace-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.8fr);
+  gap: 16px;
+}
+
+.agent-lab__table,
+.agent-lab__inspector {
+  padding: 14px;
+  border-radius: 24px;
+  background: white;
+  border: 1px solid rgba(20, 33, 61, 0.08);
+}
+
+.agent-lab__table-head,
+.agent-lab__table-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 0.7fr 0.8fr 1.2fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.agent-lab__table-head {
+  padding: 10px 0 14px;
+  font-size: 0.8rem;
+  color: rgba(20, 33, 61, 0.65);
+  border-bottom: 1px solid var(--agent-lab-line);
+}
+
+.agent-lab__table-row {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(20, 33, 61, 0.06);
+}
+
+.agent-lab__table-row:last-child {
+  border-bottom: none;
+}
+
+.agent-lab__inspector-section ul,
+.agent-lab__overlay ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.agent-lab__overlay {
+  position: absolute;
+  top: 120px;
+  right: 32px;
+  width: min(320px, calc(100% - 64px));
+  padding: 16px;
+  border-radius: 24px;
+}
+
+.agent-lab__overlay header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.agent-lab__storyboard-panels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.agent-lab__preview-groups,
+.agent-lab__spec-list,
+.agent-lab__gate-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.agent-lab__preview-group {
+  padding: 12px;
+  border-radius: 18px;
+  background: white;
+  border: 1px solid rgba(20, 33, 61, 0.08);
+}
+
+.agent-lab__preview-group ul,
+.agent-lab__spec-list,
+.agent-lab__gate-list {
+  margin-top: 8px;
+}
+
+.agent-lab__gate-status {
+  margin: 0 0 10px;
+  font-weight: 700;
+  color: var(--agent-lab-ui);
+}
+
+.agent-lab__spec-list li {
+  display: grid;
+  gap: 4px;
+}
+
+@media (max-width: 1080px) {
+  .agent-lab__workspace-body,
+  .agent-lab__toolbar,
+  .agent-lab__storyboard-panels {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-lab__overlay {
+    position: static;
+    width: auto;
+    margin-top: 16px;
+  }
+}

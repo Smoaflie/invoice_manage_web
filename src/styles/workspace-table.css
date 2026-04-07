@@ -1,0 +1,28 @@
+.toolbar-field--compact {
+  min-width: 180px;
+}
+
+.table-tag-list,
+.table-status-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(125, 113, 244, 0.08);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.table-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
