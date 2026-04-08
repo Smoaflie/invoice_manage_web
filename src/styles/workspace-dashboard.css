@@ -1,6 +1,6 @@
 .overview-grid--dashboard {
   grid-template-columns: repeat(var(--dashboard-columns), minmax(var(--dashboard-column-width), 1fr));
-  grid-auto-rows: 140px;
+  grid-auto-rows: minmax(140px, auto);
   gap: var(--dashboard-gap);
   min-width: max(100%, calc(var(--dashboard-columns) * var(--dashboard-column-width) + (var(--dashboard-columns) - 1) * var(--dashboard-gap)));
 }
@@ -162,8 +162,7 @@
   cursor: nwse-resize;
 }
 
-.dashboard-chart,
-.dashboard-slice-list {
+.dashboard-chart, .dashboard-slice-list {
   position: relative;
   display: grid;
   gap: 12px;
@@ -289,7 +288,6 @@
     --dashboard-column-width: 160px;
   }
 }
-
 @media (max-width: 560px) {
   .overview-grid--dashboard {
     --dashboard-column-width: 140px;
