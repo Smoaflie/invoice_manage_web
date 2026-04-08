@@ -19,6 +19,7 @@ import { useWorkspaceAuxiliaryDocuments } from "./useWorkspaceAuxiliaryDocuments
 import { useWorkspaceBatchActions } from "./useWorkspaceBatchActions";
 import { useWorkspaceSearchFocus } from "./useWorkspaceSearchFocus";
 import { useWorkspaceSavedViewActions } from "./useWorkspaceSavedViewActions";
+import { useWorkspaceViewDrafts } from "./useWorkspaceViewDrafts";
 import { useWorkspaceViewColumnWidths } from "./useWorkspaceViewColumnWidths";
 
 export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspaceProps) {
@@ -51,12 +52,15 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
   const { selectedIdSet, setSelectedIdSet } = usePersistedWorkspaceSelection(documentIds);
   const transferActions = useWorkspaceTransferActions({ onRefresh: props.onRefresh, setWorkspaceMessage, setSelectedIdSet, setImportingFiles });
   const { dashboardDocument, filterGroups, refreshFilterGroups, resolveFilterGroup, saveDashboardDocument } = useWorkspaceAuxiliaryDocuments();
-
+  const { currentView, hasViewDraft, handleSaveViewDraft, handleDiscardViewDraft } = useWorkspaceViewDrafts({
+    fields,
+    savedViewState,
+    setWorkspaceMessage,
+  });
   useEffect(() => {
     if (!savedViewState.ready || fields.length === 0) {
       return;
     }
-
     const nextVisibleFieldIds = mergeVisibleFieldIds(fields, savedViewState.visibleColumns);
     if (!sameStringArray(savedViewState.visibleColumns, nextVisibleFieldIds)) {
       savedViewState.setVisibleColumns(nextVisibleFieldIds);
@@ -72,7 +76,6 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
     if ((savedViewState.query.sorters ?? []).length > 0) {
       return;
     }
-
     savedViewState.setQuery((current) => ({
       ...current,
       sorters: [{ fieldId: "updatedAt", direction: "desc" }],
@@ -119,7 +122,6 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
   const allRowsSelected = filteredRows.length > 0 && filteredSelectedCount === filteredRows.length;
   const pendingChangeCount = countWorkspaceDrafts(drafts);
   const displayMessage = workspaceMessage || props.message;
-  const currentView = savedViewState.views.find((view) => view.id === savedViewState.activeViewId) ?? null;
   const selectedDocuments = useMemo(() => props.invoiceDocuments.filter((document) => selectedIdSet.has(document.id)), [props.invoiceDocuments, selectedIdSet]);
   const sharedTags = useMemo(() => {
     const [firstDocument, ...restDocuments] = selectedDocuments;
@@ -228,6 +230,7 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
     displayMessage,
     savedViewState,
     currentView,
+    hasViewDraft,
     sharedTags,
     bulkTagsText,
     kanbanFieldId,
@@ -262,6 +265,8 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
     handleRenameSavedView,
     handleDuplicateSavedView,
     handleDeleteSavedView,
+    handleSaveViewDraft,
+    handleDiscardViewDraft,
     handleSaveChanges,
     handleDiscardChanges: () => setDrafts({}),
     handleImportFiles: () => void pickWorkspaceFiles().then(transferActions.handleImportPickedFiles),

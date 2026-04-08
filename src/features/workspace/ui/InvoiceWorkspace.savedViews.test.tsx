@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterAll, afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { appDb } from "../../../shared/db/appDb";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
+import { workspaceViewDraftKey } from "../application/workspaceViewDrafts";
 
 const mockedDeps = vi.hoisted(() => ({
   saveWorkspaceDraftRowMock: vi.fn(),
@@ -322,6 +323,84 @@ describe("InvoiceWorkspace saved views", () => {
     expect(screen.getByLabelText("显示字段 商品简介")).toBeChecked();
     expect(screen.getByLabelText("显示字段 备注")).toBeChecked();
     expect(screen.queryByLabelText("显示字段 商品详情")).not.toBeInTheDocument();
+  });
+
+  test("restores persisted workspace drafts on remount without overwriting the saved view", async () => {
+    const user = userEvent.setup();
+
+    await appDb.savedViews.add({
+      id: "workspace-view-1",
+      scope: "workspace",
+      name: "原始视图",
+      isDefault: false,
+      query: {
+        scope: "workspace",
+        searchText: "",
+        conditionRoot: {
+          id: "condition-root-draft",
+          kind: "group",
+          mode: "all",
+          children: [],
+        },
+        sorters: [{ fieldId: "updatedAt", direction: "desc" }],
+        groupByFieldId: "",
+        fieldOrder: ["invoiceNumber", "buyerName"],
+      },
+      visibleColumns: ["invoiceNumber", "buyerName"],
+      createdAt: "2026-04-01T00:00:00.000Z",
+      updatedAt: "2026-04-01T00:00:00.000Z",
+    });
+    await appDb.settings.put({
+      key: "ui.activeWorkspaceViewId",
+      value: "workspace-view-1",
+      updatedAt: "2026-04-01T00:00:00.000Z",
+    });
+
+    const props = {
+      view: "records" as const,
+      invoiceDocuments: [
+        buildRow({ id: "doc-1", invoiceNumber: "INV-001", buyerName: "华东买方" }),
+        buildRow({ id: "doc-2", invoiceNumber: "INV-002", buyerName: "华北买方", updatedAt: "2026-03-31T01:00:00.000Z" }),
+      ],
+      message: "工作区已加载。",
+      onOpenDetails: () => {},
+      onEdit: () => {},
+      onOpenPdf: () => {},
+      onDelete: () => {},
+      onBulkReparse: () => {},
+      onRefresh: () => {},
+    };
+
+    const { unmount } = render(
+      <InvoiceWorkspace
+        {...props}
+      />,
+    );
+
+    await user.type(await screen.findByPlaceholderText("搜索记录..."), "华北");
+    await waitFor(() => expect(screen.queryByDisplayValue("INV-001")).not.toBeInTheDocument());
+    await waitFor(async () => {
+      expect(await appDb.settings.get(workspaceViewDraftKey("workspace-view-1") as never)).toBeTruthy();
+    });
+
+    const savedViewBeforeRemount = await appDb.savedViews.get("workspace-view-1");
+    expect(savedViewBeforeRemount?.query).toEqual(
+      expect.objectContaining({
+        searchText: "",
+      }),
+    );
+
+    unmount();
+
+    render(
+      <InvoiceWorkspace
+        {...props}
+      />,
+    );
+
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "搜索" })).toHaveValue("华北"));
+    await waitFor(() => expect(screen.queryByDisplayValue("INV-001")).not.toBeInTheDocument());
+    expect(screen.getByDisplayValue("INV-002")).toBeInTheDocument();
   });
 
   test("saves resized record and item column widths with the workspace view", async () => {
