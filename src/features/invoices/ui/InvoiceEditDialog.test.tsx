@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
 import { InvoiceEditDialog } from "./InvoiceEditDialog";
 
@@ -42,13 +42,17 @@ function makeDocument(overrides: Partial<InvoiceDocument> = {}): InvoiceDocument
 }
 
 describe("InvoiceEditDialog", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   test("renders reparse action for editable OCR invoices", async () => {
     const user = userEvent.setup();
     const onReparse = vi.fn();
 
     render(
       <InvoiceEditDialog
-        invoiceDocument={makeDocument()}
+        invoiceDocument={makeDocument({ uploader: "Alice", owner: "Finance" })}
         open
         mode="manual-edit"
         onClose={vi.fn()}
@@ -59,7 +63,37 @@ describe("InvoiceEditDialog", () => {
 
     expect(screen.getByDisplayValue("已报销 差旅")).toBeInTheDocument();
     expect(screen.getByDisplayValue("原始备注")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Alice")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Finance")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "重新 OCR 识别" }));
     expect(onReparse).toHaveBeenCalledTimes(1);
+  });
+
+  test("submits uploader and owner fields", async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+
+    render(
+      <InvoiceEditDialog
+        invoiceDocument={makeDocument({ uploader: "旧上传人", owner: "旧归属人" })}
+        open
+        mode="manual-edit"
+        onClose={vi.fn()}
+        onSave={onSave}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("上传人"));
+    await user.type(screen.getByLabelText("上传人"), "新上传人");
+    await user.clear(screen.getByLabelText("归属人"));
+    await user.type(screen.getByLabelText("归属人"), "新归属人");
+    await user.click(screen.getByRole("button", { name: "保存修改" }));
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        uploader: "新上传人",
+        owner: "新归属人",
+      }),
+    );
   });
 });

@@ -95,6 +95,118 @@ describe("saveInvoiceEdits", () => {
     expect(await appDb.invoiceAuditLogs.count()).toBe(2);
   });
 
+  test("stores audit entries for uploader owner and tags without marking edited", async () => {
+    await appDb.invoiceDocuments.add({
+      id: "doc-3",
+      contentHash: "hash-3",
+      fileName: "demo.pdf",
+      fileSize: 10,
+      lastModified: 1,
+      handleRef: "handle-3",
+      bindingStatus: "readable",
+      bindingErrorType: null,
+      ocrVendor: "baidu",
+      ocrParsedAt: "2026-03-31T00:00:00.000Z",
+      parseStatus: "parsed",
+      conflictStatus: "none",
+      conflictMessage: "",
+      invoiceNumber: "INV-003",
+      invoiceCode: "",
+      invoiceDate: "2026-03-30",
+      totalAmount: 100,
+      taxAmount: 10,
+      amountWithoutTax: 90,
+      buyerName: "Old Buyer",
+      sellerName: "Seller",
+      items: [],
+      tags: ["原标签"],
+      annotation: "",
+      uploader: "",
+      owner: "",
+      sourceType: "ocr",
+      edited: false,
+      createdAt: "2026-03-31T00:00:00.000Z",
+      updatedAt: "2026-03-31T00:00:00.000Z",
+    });
+
+    await saveInvoiceEdits({
+      invoiceDocumentId: "doc-3",
+      nextValues: {
+        uploader: "Alice",
+        owner: "Finance",
+        tags: ["新标签"],
+      },
+      changeType: "manual_edit",
+      now: () => "2026-03-31T01:00:00.000Z",
+    });
+
+    expect(await appDb.invoiceDocuments.get("doc-3")).toMatchObject({
+      uploader: "Alice",
+      owner: "Finance",
+      tags: ["新标签"],
+      edited: false,
+      updatedAt: "2026-03-31T01:00:00.000Z",
+    });
+    expect(await appDb.invoiceAuditLogs.toArray()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ targetField: "uploader", beforeValue: "", afterValue: "Alice" }),
+        expect.objectContaining({ targetField: "owner", beforeValue: "", afterValue: "Finance" }),
+        expect.objectContaining({ targetField: "tags", beforeValue: "[\"原标签\"]", afterValue: "[\"新标签\"]" }),
+      ]),
+    );
+  });
+
+  test("marks edited when audit-only fields change together with business fields", async () => {
+    await appDb.invoiceDocuments.add({
+      id: "doc-4",
+      contentHash: "hash-4",
+      fileName: "demo.pdf",
+      fileSize: 10,
+      lastModified: 1,
+      handleRef: "handle-4",
+      bindingStatus: "readable",
+      bindingErrorType: null,
+      ocrVendor: "baidu",
+      ocrParsedAt: "2026-03-31T00:00:00.000Z",
+      parseStatus: "parsed",
+      conflictStatus: "none",
+      conflictMessage: "",
+      invoiceNumber: "INV-004",
+      invoiceCode: "",
+      invoiceDate: "2026-03-30",
+      totalAmount: 100,
+      taxAmount: 10,
+      amountWithoutTax: 90,
+      buyerName: "Old Buyer",
+      sellerName: "Seller",
+      items: [],
+      tags: ["原标签"],
+      annotation: "",
+      uploader: "",
+      owner: "",
+      sourceType: "ocr",
+      edited: false,
+      createdAt: "2026-03-31T00:00:00.000Z",
+      updatedAt: "2026-03-31T00:00:00.000Z",
+    });
+
+    await saveInvoiceEdits({
+      invoiceDocumentId: "doc-4",
+      nextValues: {
+        buyerName: "New Buyer",
+        owner: "Finance",
+      },
+      changeType: "manual_edit",
+      now: () => "2026-03-31T01:00:00.000Z",
+    });
+
+    expect(await appDb.invoiceDocuments.get("doc-4")).toMatchObject({
+      buyerName: "New Buyer",
+      owner: "Finance",
+      edited: true,
+    });
+  });
+
   test("keeps manual-created documents out of edited state", async () => {
     await appDb.invoiceDocuments.add({
       id: "doc-2",

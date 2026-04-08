@@ -18,6 +18,7 @@ interface SaveInvoiceEditsInput {
 }
 
 const NON_AUDIT_FIELDS = new Set<keyof InvoiceDocument>(["edited", "updatedAt"]);
+const AUDIT_ONLY_EDIT_FIELDS = new Set<keyof InvoiceDocument>(["uploader", "owner", "tags"]);
 
 function serializeValue(value: unknown) {
   if (value === null || value === undefined) {
@@ -27,16 +28,20 @@ function serializeValue(value: unknown) {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
-export function buildAuditEntries(input: BuildAuditEntriesInput): InvoiceAuditLog[] {
-  const changedKeys = Object.keys(input.after).filter((key) => {
+function getChangedKeys(before: Partial<InvoiceDocument>, after: Partial<InvoiceDocument>) {
+  return Object.keys(after).filter((key) => {
     if (NON_AUDIT_FIELDS.has(key as keyof InvoiceDocument)) {
       return false;
     }
 
-    const beforeValue = serializeValue(input.before[key as keyof InvoiceDocument]);
-    const afterValue = serializeValue(input.after[key as keyof InvoiceDocument]);
+    const beforeValue = serializeValue(before[key as keyof InvoiceDocument]);
+    const afterValue = serializeValue(after[key as keyof InvoiceDocument]);
     return beforeValue !== afterValue;
   });
+}
+
+export function buildAuditEntries(input: BuildAuditEntriesInput): InvoiceAuditLog[] {
+  const changedKeys = getChangedKeys(input.before, input.after);
 
   return changedKeys.map((key) => ({
     id: globalThis.crypto.randomUUID(),
@@ -57,7 +62,11 @@ export async function saveInvoiceEdits(input: SaveInvoiceEditsInput): Promise<In
   }
 
   const timestamp = input.now();
-  const shouldMarkEdited = input.changeType !== "manual_create" && current.sourceType !== "manual";
+  const changedKeys = getChangedKeys(current, input.nextValues);
+  const shouldMarkEdited =
+    input.changeType !== "manual_create" &&
+    current.sourceType !== "manual" &&
+    changedKeys.some((key) => !AUDIT_ONLY_EDIT_FIELDS.has(key as keyof InvoiceDocument));
   const nextDocument: InvoiceDocument = {
     ...current,
     ...input.nextValues,

@@ -13,6 +13,8 @@ export type InvoiceEditValues = {
   taxAmount: string;
   totalAmount: string;
   tagsText: string;
+  uploader: string;
+  owner: string;
   remark: string;
   annotation: string;
 };
@@ -38,6 +40,8 @@ function toFormValues(invoiceDocument: InvoiceDocument | null): InvoiceEditValue
     taxAmount: invoiceDocument ? String(invoiceDocument.taxAmount || "") : "",
     totalAmount: invoiceDocument ? String(invoiceDocument.totalAmount || "") : "",
     tagsText: invoiceDocument?.tags.join(" ") ?? "",
+    uploader: invoiceDocument?.uploader ?? "",
+    owner: invoiceDocument?.owner ?? "",
     remark: invoiceDocument?.remark ?? "",
     annotation: invoiceDocument?.annotation ?? "",
   };
@@ -122,6 +126,17 @@ export function InvoiceEditDialog({ invoiceDocument, open, mode, onClose, onSave
             <span>标签</span>
             <input value={values.tagsText} onChange={(event) => setValues((current) => ({ ...current, tagsText: event.target.value }))} placeholder="用空格分隔多个标签" />
           </label>
+
+          <div className="document-form__grid">
+            <label>
+              <span>上传人</span>
+              <input value={values.uploader} onChange={(event) => setValues((current) => ({ ...current, uploader: event.target.value }))} />
+            </label>
+            <label>
+              <span>归属人</span>
+              <input value={values.owner} onChange={(event) => setValues((current) => ({ ...current, owner: event.target.value }))} />
+            </label>
+          </div>
 
           <label>
             <span>备注</span>

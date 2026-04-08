@@ -34,6 +34,8 @@ export async function saveDashboardInvoiceEdits(input: SaveDashboardInvoiceEdits
       taxAmount: parseAmount(input.values.taxAmount),
       totalAmount: parseAmount(input.values.totalAmount),
       tags: parseTags(input.values.tagsText),
+      uploader: input.values.uploader.trim(),
+      owner: input.values.owner.trim(),
       remark: input.values.remark.trim(),
       annotation: input.values.annotation.trim(),
       parseStatus: "parsed",

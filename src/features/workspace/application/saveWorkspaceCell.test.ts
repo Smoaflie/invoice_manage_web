@@ -96,7 +96,9 @@ describe("saveWorkspaceCell", () => {
 
     expect(await appDb.invoiceDocuments.get("doc-1")).toMatchObject({
       tags: ["普通标签", "时期:2025年"],
+      edited: false,
     });
+    expect(await appDb.invoiceAuditLogs.where("invoiceDocumentId").equals("doc-1").count()).toBe(1);
   });
 
   test("saves multiple row drafts in a single document write", async () => {
