@@ -32,7 +32,9 @@ export function App() {
     <main className="app-shell">
       <AppSidebar activeView={activeView} status={sidebarStatus} onSelectView={setActiveView} />
       <div className="app-shell__workspace">
-        {activeView === "settings" || activeView === "collaboration" ? <AppTopbar title={activeMeta.title} subtitle={activeMeta.subtitle} /> : null}
+        {activeView === "settings" || activeView === "collaboration" ? (
+          <AppTopbar title={activeMeta.title} subtitle={activeMeta.subtitle} showUserNameEditor={activeView === "settings"} />
+        ) : null}
         <Dashboard activeView={activeView} onSelectView={setActiveView} onSidebarStatusChange={setSidebarStatus} />
       </div>
     </main>
