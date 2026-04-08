@@ -237,7 +237,7 @@ describe("InvoiceWorkspace", () => {
     await waitFor(() =>
       expect(onSidebarStatusChange).toHaveBeenCalledWith({
         message: "本地工作台数据已加载。",
-        stats: ["2 条记录", "2 条结果", "0 条已选", "0 项待保存"],
+        stats: ["2 条记录", "2 条结果", "0 条已选"],
       }),
     );
   });

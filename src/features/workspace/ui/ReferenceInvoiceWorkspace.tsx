@@ -26,10 +26,9 @@ export function ReferenceInvoiceWorkspace(props: ReferenceInvoiceWorkspaceProps)
         `${props.invoiceDocuments.length} 条记录`,
         `${controller.filteredRows.length} 条结果`,
         `${controller.selectedIdSet.size} 条已选`,
-        `${controller.pendingChangeCount} 项待保存`,
       ],
     });
-  }, [controller.displayMessage, controller.filteredRows.length, controller.pendingChangeCount, controller.selectedIdSet.size, props.invoiceDocuments.length, props.onSidebarStatusChange]);
+  }, [controller.displayMessage, controller.filteredRows.length, controller.selectedIdSet.size, props.invoiceDocuments.length, props.onSidebarStatusChange]);
 
   return (
     <section className="reference-workspace" data-testid="reference-workspace-root">

@@ -159,6 +159,10 @@
   }
 
   .app-sidebar {
+    position: static;
+    top: auto;
+    height: auto;
+    overflow-y: visible;
     grid-template-rows: auto;
   }
 

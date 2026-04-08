@@ -14,7 +14,7 @@ vi.mock("../features/dashboard/ui/Dashboard", () => ({
     useEffect(() => {
       onSidebarStatusChange?.({
         message: activeView === "records" ? "本地工作台数据已加载。" : `${activeView} 视图已加载。`,
-        stats: activeView === "records" ? ["12 条记录", "7 条结果", "2 条已选", "1 项待保存"] : ["0 条记录"],
+        stats: activeView === "records" ? ["12 条记录", "7 条结果", "2 条已选"] : ["0 条记录"],
       });
     }, [activeView, onSidebarStatusChange]);
 
@@ -38,7 +38,7 @@ describe("App", () => {
     expect(screen.getByText("12 条记录")).toBeInTheDocument();
     expect(screen.getByText("7 条结果")).toBeInTheDocument();
     expect(screen.getByText("2 条已选")).toBeInTheDocument();
-    expect(screen.getByText("1 项待保存")).toBeInTheDocument();
+    expect(screen.queryByText("1 项待保存")).toBeNull();
 
     await user.click(screen.getByRole("button", { name: "仪表盘 综合视图" }));
     expect(screen.getByTestId("dashboard-shell")).toHaveTextContent("dashboard");

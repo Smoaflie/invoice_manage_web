@@ -135,7 +135,6 @@ export function ReferenceWorkspaceToolbar(props: ReferenceWorkspaceToolbarProps)
               <span>{props.totalCount} 条记录</span>
               <span>{props.resultCount} 条结果</span>
               <span>{props.selectedCount} 条已选</span>
-              <span>{props.pendingCount} 项待保存</span>
             </div>
           </div>
         )}
