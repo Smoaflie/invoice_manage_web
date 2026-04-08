@@ -112,6 +112,7 @@ function normalizeImportedInvoiceDocument(
 
 export function buildImportPlan(importedDocuments: ImportedInvoiceDocument[], existingDocuments: InvoiceDocument[]): ImportPlan {
   const takenIds = new Set(existingDocuments.map((document) => document.id));
+  const comparableExistingDocuments = existingDocuments.filter((document) => document.conflictStatus === "none");
   const conflicts: ImportConflict[] = [];
   const sourceIdToImportedId = new Map<string, string>();
   const invoiceDocuments: InvoiceDocument[] = [];
@@ -119,7 +120,7 @@ export function buildImportPlan(importedDocuments: ImportedInvoiceDocument[], ex
   let conflictedInvoiceDocuments = 0;
 
   for (const imported of importedDocuments) {
-    const sameHashMatches = existingDocuments.filter((document) => document.contentHash === imported.contentHash);
+    const sameHashMatches = comparableExistingDocuments.filter((document) => document.contentHash === imported.contentHash);
     const sameHashDuplicate = sameHashMatches.find((document) => findDifferingInvoiceInfoFields(imported, document).length === 0);
     if (sameHashDuplicate) {
       continue;
@@ -139,7 +140,7 @@ export function buildImportPlan(importedDocuments: ImportedInvoiceDocument[], ex
 
     const normalizedInvoiceNumber = imported.invoiceNumber.trim();
     const sameNumberConflict = normalizedInvoiceNumber.length > 0
-      ? existingDocuments.find((document) => document.invoiceNumber.trim() === normalizedInvoiceNumber && document.contentHash !== imported.contentHash)
+      ? comparableExistingDocuments.find((document) => document.invoiceNumber.trim() === normalizedInvoiceNumber && document.contentHash !== imported.contentHash)
       : undefined;
 
     if (sameNumberConflict) {
