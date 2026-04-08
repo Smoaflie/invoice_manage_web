@@ -96,6 +96,40 @@
   margin-right: 2px;
 }
 
+.workspace-view-tabs__draft-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(17, 27, 41, 0.08);
+}
+
+.workspace-view-tabs__draft-button {
+  min-height: 28px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #191720;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.workspace-view-tabs__draft-button:hover {
+  background: rgba(17, 27, 41, 0.06);
+}
+
+.workspace-view-tabs__draft-button--save {
+  color: #1f63f0;
+}
+
+.workspace-view-tabs__draft-button--save:hover {
+  background: rgba(31, 99, 240, 0.08);
+}
+
 .workspace-view-tabs__add-button {
   align-self: center;
   width: 32px;

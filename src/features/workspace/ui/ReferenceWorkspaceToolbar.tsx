@@ -23,6 +23,7 @@ type ReferenceWorkspaceToolbarProps = {
   draftName: string;
   views: SavedView[];
   canSetAsDefault: boolean;
+  hasViewDraft?: boolean;
   presentation: WorkspacePresentation["commandDeck"];
   compactRecordsLayout?: boolean;
   onSearchTextChange: (value: string) => void;
@@ -36,6 +37,8 @@ type ReferenceWorkspaceToolbarProps = {
   onRenameSavedView?: (name: string) => void | Promise<void>;
   onDuplicateSavedView?: (name: string) => void | Promise<void>;
   onDeleteSavedView?: () => void | Promise<void>;
+  onSaveViewDraft?: () => void | Promise<void>;
+  onDiscardViewDraft?: () => void | Promise<void>;
   onOpenFilter: () => void;
   onOpenSort: () => void;
   onOpenGroup: () => void;
@@ -100,12 +103,15 @@ export function ReferenceWorkspaceToolbar(props: ReferenceWorkspaceToolbarProps)
           activeViewId={props.activeViewId}
           builtinLabel="默认视图"
           canSetAsDefault={props.canSetAsDefault}
+          hasDraft={props.hasViewDraft}
           onSelectView={props.onSelectSavedView}
           onCreateView={props.onCreateSavedView ?? (async () => {})}
           onRenameView={props.onRenameSavedView ?? (async () => {})}
           onDuplicateView={props.onDuplicateSavedView ?? (async () => {})}
           onDeleteView={props.onDeleteSavedView ?? (async () => {})}
           onSetDefaultView={props.onSetDefaultView}
+          onSaveDraft={props.onSaveViewDraft}
+          onDiscardDraft={props.onDiscardViewDraft}
         />
       ) : (
         <>

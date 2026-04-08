@@ -403,6 +403,137 @@ describe("InvoiceWorkspace saved views", () => {
     expect(screen.getByDisplayValue("INV-002")).toBeInTheDocument();
   });
 
+  test("shows draft actions between the active view tab and more menu, and saves the draft into the current view", async () => {
+    const user = userEvent.setup();
+
+    await appDb.savedViews.add({
+      id: "workspace-view-1",
+      scope: "workspace",
+      name: "原始视图",
+      isDefault: false,
+      query: {
+        scope: "workspace",
+        searchText: "",
+        conditionRoot: {
+          id: "condition-root-save-draft",
+          kind: "group",
+          mode: "all",
+          children: [],
+        },
+        sorters: [{ fieldId: "updatedAt", direction: "desc" }],
+        groupByFieldId: "",
+        fieldOrder: ["invoiceNumber", "buyerName"],
+      },
+      visibleColumns: ["invoiceNumber", "buyerName"],
+      createdAt: "2026-04-01T00:00:00.000Z",
+      updatedAt: "2026-04-01T00:00:00.000Z",
+    });
+    await appDb.settings.put({
+      key: "ui.activeWorkspaceViewId",
+      value: "workspace-view-1",
+      updatedAt: "2026-04-01T00:00:00.000Z",
+    });
+
+    render(
+      <InvoiceWorkspace
+        view="records"
+        invoiceDocuments={[
+          buildRow({ id: "doc-1", invoiceNumber: "INV-001", buyerName: "华东买方" }),
+          buildRow({ id: "doc-2", invoiceNumber: "INV-002", buyerName: "华北买方", updatedAt: "2026-03-31T01:00:00.000Z" }),
+        ]}
+        message="工作区已加载。"
+        onOpenDetails={() => {}}
+        onEdit={() => {}}
+        onOpenPdf={() => {}}
+        onDelete={() => {}}
+        onBulkReparse={() => {}}
+        onRefresh={() => {}}
+      />,
+    );
+
+    await user.type(await screen.findByPlaceholderText("搜索记录..."), "华北");
+    await waitFor(() => expect(screen.queryByDisplayValue("INV-001")).not.toBeInTheDocument());
+
+    const activeShell = screen.getByRole("tab", { name: "原始视图" }).parentElement as HTMLElement;
+    const saveButton = within(activeShell).getByRole("button", { name: "保存" });
+    const discardButton = within(activeShell).getByRole("button", { name: "放弃" });
+    expect(saveButton.compareDocumentPosition(discardButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(discardButton.compareDocumentPosition(within(activeShell).getByRole("button", { name: "更多视图操作" })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    await user.click(saveButton);
+
+    await waitFor(() => expect(within(activeShell).queryByRole("button", { name: "保存" })).toBeNull());
+    await expect(appDb.savedViews.get("workspace-view-1")).resolves.toMatchObject({
+      query: expect.objectContaining({
+        searchText: "华北",
+      }),
+    });
+    await expect(appDb.settings.get(workspaceViewDraftKey("workspace-view-1") as never)).resolves.toBeUndefined();
+  });
+
+  test("discards the current workspace draft and restores the saved view", async () => {
+    const user = userEvent.setup();
+
+    await appDb.savedViews.add({
+      id: "workspace-view-1",
+      scope: "workspace",
+      name: "原始视图",
+      isDefault: false,
+      query: {
+        scope: "workspace",
+        searchText: "",
+        conditionRoot: {
+          id: "condition-root-discard-draft",
+          kind: "group",
+          mode: "all",
+          children: [],
+        },
+        sorters: [{ fieldId: "updatedAt", direction: "desc" }],
+        groupByFieldId: "",
+        fieldOrder: ["invoiceNumber", "buyerName"],
+      },
+      visibleColumns: ["invoiceNumber", "buyerName"],
+      createdAt: "2026-04-01T00:00:00.000Z",
+      updatedAt: "2026-04-01T00:00:00.000Z",
+    });
+    await appDb.settings.put({
+      key: "ui.activeWorkspaceViewId",
+      value: "workspace-view-1",
+      updatedAt: "2026-04-01T00:00:00.000Z",
+    });
+
+    render(
+      <InvoiceWorkspace
+        view="records"
+        invoiceDocuments={[
+          buildRow({ id: "doc-1", invoiceNumber: "INV-001", buyerName: "华东买方" }),
+          buildRow({ id: "doc-2", invoiceNumber: "INV-002", buyerName: "华北买方", updatedAt: "2026-03-31T01:00:00.000Z" }),
+        ]}
+        message="工作区已加载。"
+        onOpenDetails={() => {}}
+        onEdit={() => {}}
+        onOpenPdf={() => {}}
+        onDelete={() => {}}
+        onBulkReparse={() => {}}
+        onRefresh={() => {}}
+      />,
+    );
+
+    await user.type(await screen.findByPlaceholderText("搜索记录..."), "华北");
+    await waitFor(() => expect(screen.queryByDisplayValue("INV-001")).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "放弃" }));
+
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "搜索" })).toHaveValue(""));
+    expect(screen.getByDisplayValue("INV-001")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("INV-002")).toBeInTheDocument();
+    await expect(appDb.savedViews.get("workspace-view-1")).resolves.toMatchObject({
+      query: expect.objectContaining({
+        searchText: "",
+      }),
+    });
+  });
+
   test("saves resized record and item column widths with the workspace view", async () => {
     const user = userEvent.setup();
     const promptSpy = vi.spyOn(window, "prompt").mockReturnValue("列宽视图");

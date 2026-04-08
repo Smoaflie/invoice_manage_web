@@ -6,12 +6,15 @@ type WorkspaceViewTabsProps = {
   activeViewId: string;
   builtinLabel: string;
   canSetAsDefault: boolean;
+  hasDraft?: boolean;
   onSelectView: (viewId: string) => void | Promise<void>;
   onCreateView: (name: string) => void | Promise<void>;
   onRenameView: (name: string) => void | Promise<void>;
   onDuplicateView: (name: string) => void | Promise<void>;
   onDeleteView: () => void | Promise<void>;
   onSetDefaultView: () => void | Promise<void>;
+  onSaveDraft?: () => void | Promise<void>;
+  onDiscardDraft?: () => void | Promise<void>;
 };
 
 function nextSuggestedName(activeLabel: string) {
@@ -78,6 +81,16 @@ export function WorkspaceViewTabs(props: WorkspaceViewTabsProps) {
               </button>
               {active ? (
                 <>
+                  {props.hasDraft ? (
+                    <div className="workspace-view-tabs__draft-pill" aria-label="视图草稿操作">
+                      <button type="button" className="workspace-view-tabs__draft-button workspace-view-tabs__draft-button--save" onClick={() => void props.onSaveDraft?.()}>
+                        保存
+                      </button>
+                      <button type="button" className="workspace-view-tabs__draft-button" onClick={() => void props.onDiscardDraft?.()}>
+                        放弃
+                      </button>
+                    </div>
+                  ) : null}
                   <button
                     type="button"
                     className="workspace-view-tabs__icon-button workspace-view-tabs__icon-button--inline"

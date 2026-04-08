@@ -52,6 +52,7 @@ export function ReferenceInvoiceWorkspace(props: ReferenceInvoiceWorkspaceProps)
           draftName={controller.savedViewState.draftName}
           views={controller.savedViewState.views}
           canSetAsDefault={controller.savedViewState.activeViewId.length > 0 && !controller.currentView?.isDefault}
+          hasViewDraft={controller.hasViewDraft}
           onSearchTextChange={controller.setSearchText}
           onBulkTagsTextChange={controller.setBulkTagsText}
           onDraftNameChange={controller.savedViewState.setDraftName}
@@ -62,6 +63,8 @@ export function ReferenceInvoiceWorkspace(props: ReferenceInvoiceWorkspaceProps)
           onRenameSavedView={controller.handleRenameSavedView}
           onDuplicateSavedView={controller.handleDuplicateSavedView}
           onDeleteSavedView={controller.handleDeleteSavedView}
+          onSaveViewDraft={controller.handleSaveViewDraft}
+          onDiscardViewDraft={controller.handleDiscardViewDraft}
           onSetDefaultView={controller.savedViewState.setDefaultView}
           onOpenFilter={() => controller.setFilterOpen(true)}
           onOpenSort={() => controller.setSortOpen(true)}
