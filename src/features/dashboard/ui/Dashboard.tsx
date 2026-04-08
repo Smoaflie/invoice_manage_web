@@ -14,7 +14,6 @@ import { requestInvoiceOcr } from "../../ocr/infrastructure/ocrClients";
 import { exportData } from "../../transfer/application/exportData";
 import { InvoiceDetailsDrawer } from "../../invoices/ui/InvoiceDetailsDrawer";
 import { InvoiceEditDialog, type InvoiceEditValues } from "../../invoices/ui/InvoiceEditDialog";
-import { OcrSettingsForm } from "../../settings/ui/OcrSettingsForm";
 import { InvoiceWorkspace } from "../../workspace/ui/InvoiceWorkspace";
 import { useDashboardSidebarStatus } from "./useDashboardSidebarStatus";
 import {
@@ -25,9 +24,8 @@ import {
   toOcrClientConfig,
 } from "./dashboardDocumentActions";
 import { saveDashboardInvoiceEdits } from "./dashboardInvoiceEdit";
-import { SettingsWorkspace } from "./SettingsWorkspace";
-import { CollaborationWorkspace } from "../../collaboration/ui/CollaborationWorkspace";
 import type { DashboardSidebarStatus } from "./dashboardSidebarStatus";
+import { DashboardAuxiliaryView } from "./DashboardAuxiliaryView";
 
 export type DashboardView = "records" | "dashboard" | "collaboration" | "settings";
 
@@ -321,18 +319,5 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
     );
   }
 
-  if (activeView === "settings") {
-    return (
-      <SettingsWorkspace
-        settingsForm={<OcrSettingsForm />}
-        invoiceDocuments={invoiceDocuments}
-      />
-    );
-  }
-
-  if (activeView === "collaboration") {
-    return <CollaborationWorkspace />;
-  }
-
-  return null;
+  return activeView === "settings" || activeView === "collaboration" ? <DashboardAuxiliaryView activeView={activeView} invoiceDocuments={invoiceDocuments} /> : null;
 }

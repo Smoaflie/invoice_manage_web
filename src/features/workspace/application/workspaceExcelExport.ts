@@ -1,4 +1,4 @@
-import { Workbook, type Alignment, type CellValue, type Column } from "exceljs";
+import type { Workbook, Alignment, CellValue, Column } from "exceljs";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
 import type { WorkspaceFieldDefinition } from "../../../shared/types/workspaceField";
 import { formatDisplayDateTime } from "../../../shared/time/formatDisplayTime";
@@ -162,6 +162,7 @@ function styleHeaderRow(workbook: Workbook) {
 }
 
 export async function buildWorkspaceExcelExport(input: WorkspaceExcelExportInput): Promise<WorkspaceExcelExportFile> {
+  const { Workbook } = await import("exceljs");
   const now = input.now?.() ?? new Date();
   const columns = buildColumns(input.fields);
   const workbook = new Workbook();

@@ -1,5 +1,3 @@
-import JSZip from "jszip";
-
 export type InvoiceBundlePdfEntry = {
   bundleFileName: string;
   file: File;
@@ -11,6 +9,7 @@ type BuildInvoiceBundleZipInput = {
 };
 
 export async function buildInvoiceBundleZip(input: BuildInvoiceBundleZipInput) {
+  const { default: JSZip } = await import("jszip");
   const archive = new JSZip();
 
   archive.file("invoice-export.json", JSON.stringify(input.jsonPayload, null, 2));

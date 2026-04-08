@@ -1,10 +1,9 @@
-import { PDFDocument } from "pdf-lib";
-
 export async function mergePdfFiles(files: File[]) {
   if (files.length === 0) {
     throw new Error("请选择至少一个 PDF 文件。");
   }
 
+  const { PDFDocument } = await import("pdf-lib");
   const mergedDocument = await PDFDocument.create();
 
   for (const file of files) {
