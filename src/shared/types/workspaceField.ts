@@ -1,4 +1,4 @@
-export type WorkspaceFieldType = "string" | "number" | "multi_select";
+export type WorkspaceFieldType = "string" | "number" | "multi_select" | "single_select";
 export type WorkspaceFieldSource = "builtin" | "tag_group" | "custom";
 
 export interface WorkspaceFieldDefinition {

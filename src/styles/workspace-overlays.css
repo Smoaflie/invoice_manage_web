@@ -110,6 +110,11 @@
   gap: 12px;
 }
 
+.workspace-dialog__list-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
 .workspace-dialog__list-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -122,7 +127,16 @@
 }
 
 .workspace-dialog__list-item--filter {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr) auto;
+}
+
+.workspace-dialog__list-item--filter-1-1-2 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr) auto;
+}
+
+.workspace-dialog__list-item--filter-compact {
+  gap: 8px;
+  padding: 12px 14px;
 }
 
 .workspace-dialog__field,
@@ -157,6 +171,64 @@
   min-height: 108px;
 }
 
+.workspace-dialog__field--span-2 {
+  grid-column: span 2;
+}
+
+.workspace-dialog__field--operator {
+  max-width: 100%;
+}
+
+.workspace-dialog__row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-self: end;
+  justify-content: flex-end;
+}
+
+.workspace-dialog__row-actions--centered {
+  align-self: center;
+}
+
+.workspace-dialog__remove-button {
+  min-width: 40px;
+  padding-inline: 0;
+}
+
+.workspace-dialog__remove-button--compact {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.workspace-dialog__config-view {
+  display: grid;
+  gap: 14px;
+}
+
+.workspace-dialog__config-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.workspace-dialog__config-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workspace-dialog__config-status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 @media (max-width: 900px) {
   .overlay-shell {
     padding: 16px;
@@ -171,4 +243,9 @@
   .workspace-dialog__list-item--filter {
     grid-template-columns: 1fr;
   }
+
+  .workspace-dialog__field--span-2 {
+    grid-column: auto;
+  }
+
 }

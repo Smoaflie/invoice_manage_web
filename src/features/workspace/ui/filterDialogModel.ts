@@ -14,6 +14,10 @@ export type DraftCondition = {
   filterGroupId: string;
 };
 
+export function getDraftTargetValue(draft: DraftCondition) {
+  return draft.type === "filter_group" ? "filter_group" : `field:${draft.fieldId}`;
+}
+
 export function operatorOptions(field: WorkspaceFieldDefinition | undefined) {
   if (!field) {
     return [{ value: "contains", label: "包含" }] satisfies Array<{ value: WorkspaceFilterOperator; label: string }>;
@@ -28,6 +32,9 @@ export function operatorOptions(field: WorkspaceFieldDefinition | undefined) {
   if (field.type === "multi_select") {
     return [{ value: "includes_any", label: "包含任一项" }] satisfies Array<{ value: WorkspaceFilterOperator; label: string }>;
   }
+  if (field.type === "single_select") {
+    return [{ value: "equals", label: "等于" }] satisfies Array<{ value: WorkspaceFilterOperator; label: string }>;
+  }
   return [
     { value: "contains", label: "包含" },
     { value: "equals", label: "等于" },
@@ -36,12 +43,39 @@ export function operatorOptions(field: WorkspaceFieldDefinition | undefined) {
 }
 
 export function createDefaultDraft(fields: WorkspaceFieldDefinition[], index = 0): DraftCondition {
-  const defaultField = fields.find((field) => field.type === "string") ?? fields[0];
+  const defaultField = fields.find((field) => field.type === "string" || field.type === "single_select") ?? fields[0];
   return {
     id: `draft-${index + 1}`,
     type: "field",
     fieldId: defaultField?.id ?? "",
     operator: operatorOptions(defaultField)[0]?.value ?? "contains",
+    textValue: "",
+    multiValue: [],
+    filterGroupId: "",
+  };
+}
+
+export function applyDraftTargetValue(fields: WorkspaceFieldDefinition[], draft: DraftCondition, targetValue: string, defaultFilterGroupId = ""): DraftCondition {
+  if (targetValue === "filter_group") {
+    return {
+      ...draft,
+      type: "filter_group",
+      fieldId: "",
+      operator: "contains",
+      textValue: "",
+      multiValue: [],
+      filterGroupId: draft.filterGroupId || defaultFilterGroupId,
+    };
+  }
+
+  const fieldId = targetValue.replace(/^field:/, "");
+  const nextField = fields.find((field) => field.id === fieldId);
+
+  return {
+    ...draft,
+    type: "field",
+    fieldId,
+    operator: operatorOptions(nextField)[0]?.value ?? "contains",
     textValue: "",
     multiValue: [],
     filterGroupId: "",

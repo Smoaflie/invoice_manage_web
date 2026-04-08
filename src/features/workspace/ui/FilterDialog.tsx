@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import type { ConditionGroup } from "../../../shared/types/filterGroup";
+import { useEffect, useState } from "react";
+import type { ConditionGroup, FilterGroup } from "../../../shared/types/filterGroup";
 import type { WorkspaceFieldDefinition } from "../../../shared/types/workspaceField";
-import type { FilterGroup } from "../../../shared/types/filterGroup";
 import { listFilterGroups, saveFilterGroup } from "../../filters/application/filterGroups";
-import { buildConditionRootFromDrafts, createDefaultDraft, createDraftsFromConditionRoot, operatorOptions, type DraftCondition } from "./filterDialogModel";
+import { FilterDialogRuleRow } from "./FilterDialogRuleRow";
+import { FilterGroupConfigMenu } from "./FilterGroupConfigMenu";
+import { buildConditionRootFromDrafts, createDefaultDraft, createDraftsFromConditionRoot, type DraftCondition } from "./filterDialogModel";
 
 type FilterDialogProps = {
   open: boolean;
@@ -14,13 +15,47 @@ type FilterDialogProps = {
   onFilterGroupsChange?: () => void | Promise<void>;
 };
 
-function getRuleLabel(baseLabel: string, index: number) {
-  return index === 0 ? baseLabel : `${baseLabel} ${index + 1}`;
+function buildDraftRoot(fields: WorkspaceFieldDefinition[], drafts: DraftCondition[]) {
+  return buildConditionRootFromDrafts(fields, drafts, `group-root-${Date.now()}`);
+}
+
+function cloneDrafts(drafts: DraftCondition[]) {
+  return drafts.map((draft) => ({ ...draft, multiValue: [...draft.multiValue] }));
 }
 
 export function FilterDialog({ open, fields, conditionRoot, onClose, onApply, onFilterGroupsChange }: FilterDialogProps) {
   const [drafts, setDrafts] = useState<DraftCondition[]>([]);
+  const [groupDrafts, setGroupDrafts] = useState<DraftCondition[]>([createDefaultDraft(fields)]);
   const [filterGroups, setFilterGroups] = useState<FilterGroup[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [configStatus, setConfigStatus] = useState("");
+  const [view, setView] = useState<"rules" | "groups">("rules");
+
+  function selectGroupForConfig(groupId: string, groups: FilterGroup[] = filterGroups) {
+    const group = groups.find((item) => item.id === groupId);
+    setSelectedGroupId(groupId);
+    setGroupDrafts(group ? createDraftsFromConditionRoot(fields, group.root) : [createDefaultDraft(fields)]);
+  }
+
+  async function refreshFilterGroups(preferredGroupId?: string) {
+    const groups = await listFilterGroups();
+    const nextSelectedGroupId =
+      preferredGroupId && groups.some((group) => group.id === preferredGroupId)
+        ? preferredGroupId
+        : groups.some((group) => group.id === selectedGroupId)
+          ? selectedGroupId
+          : groups[0]?.id ?? "";
+
+    setFilterGroups(groups);
+    setSelectedGroupId(nextSelectedGroupId);
+    if (nextSelectedGroupId && nextSelectedGroupId !== selectedGroupId) {
+      selectGroupForConfig(nextSelectedGroupId, groups);
+    }
+    if (!nextSelectedGroupId) {
+      setGroupDrafts([createDefaultDraft(fields)]);
+    }
+    return groups;
+  }
 
   useEffect(() => {
     if (!open) {
@@ -28,45 +63,80 @@ export function FilterDialog({ open, fields, conditionRoot, onClose, onApply, on
     }
 
     let active = true;
+    setConfigStatus("");
+    setView("rules");
     void listFilterGroups().then((groups) => {
-      if (active) {
-        setFilterGroups(groups);
+      if (!active) {
+        return;
       }
+
+      setFilterGroups(groups);
+      const initialGroupId = groups[0]?.id ?? "";
+      setSelectedGroupId(initialGroupId);
+      setGroupDrafts(initialGroupId ? createDraftsFromConditionRoot(fields, groups[0].root) : [createDefaultDraft(fields)]);
     });
 
     return () => {
       active = false;
     };
-  }, [open]);
+  }, [fields, open]);
 
   useEffect(() => {
     if (!open) {
       return;
     }
+
     setDrafts(createDraftsFromConditionRoot(fields, conditionRoot));
   }, [conditionRoot, fields, open]);
-
-  const availableFields = useMemo(() => fields, [fields]);
 
   if (!open) {
     return null;
   }
 
-  const handleSaveAsFilterGroup = async () => {
-    const name = window.prompt("请输入筛选组名称");
-    if (!name || name.trim().length === 0) {
+  const handleLoadFilterGroup = async (groupId: string) => {
+    const group = filterGroups.find((item) => item.id === groupId);
+    if (!group) {
       return;
     }
 
-    await saveFilterGroup({
-      name,
-      root: buildConditionRootFromDrafts(availableFields, drafts, `group-root-${Date.now()}`),
-      now: () => new Date().toISOString(),
-    });
+    setDrafts(cloneDrafts(groupDrafts));
+    setConfigStatus(`已加载筛选组：${group.name}`);
+  };
 
-    const groups = await listFilterGroups();
-    setFilterGroups(groups);
-    await onFilterGroupsChange?.();
+  const handleSaveFilterGroup = async (groupId: string) => {
+    const group = filterGroups.find((item) => item.id === groupId);
+    if (!group) {
+      return;
+    }
+
+    try {
+      await saveFilterGroup({
+        id: group.id,
+        name: group.name,
+        root: buildDraftRoot(fields, groupDrafts),
+        now: () => new Date().toISOString(),
+      });
+      await refreshFilterGroups();
+      await onFilterGroupsChange?.();
+      setConfigStatus(`已保存筛选组：${group.name}`);
+    } catch (error) {
+      setConfigStatus(error instanceof Error ? error.message : "保存筛选组失败。");
+    }
+  };
+
+  const handleSaveAsFilterGroup = async (name: string) => {
+    try {
+      const savedGroup = await saveFilterGroup({
+        name,
+        root: buildDraftRoot(fields, groupDrafts),
+        now: () => new Date().toISOString(),
+      });
+      await refreshFilterGroups();
+      await onFilterGroupsChange?.();
+      setConfigStatus(`已另存为筛选组：${savedGroup.name}`);
+    } catch (error) {
+      setConfigStatus(error instanceof Error ? error.message : "另存为筛选组失败。");
+    }
   };
 
   return (
@@ -83,175 +153,60 @@ export function FilterDialog({ open, fields, conditionRoot, onClose, onApply, on
           </button>
         </div>
 
-        <div className="workspace-dialog__list">
-          {drafts.map((draft, index) => {
-            const selectedField = availableFields.find((field) => field.id === draft.fieldId);
-            const operators = operatorOptions(selectedField);
-            const valueDisabled = draft.type !== "field" || draft.operator === "is_not_empty";
-            const ruleTypeLabel = getRuleLabel("规则类型", index);
-            const fieldLabel = getRuleLabel("筛选字段", index);
-            const operatorLabel = getRuleLabel("筛选条件", index);
-            const valueLabel = getRuleLabel("筛选值", index);
-            const groupLabel = getRuleLabel("筛选组", index);
+        {view === "rules" ? (
+          <>
+            <div className="workspace-dialog__list" role="list" aria-label="筛选规则列表">
+              {drafts.map((draft, index) => (
+                <FilterDialogRuleRow
+                  key={`${draft.id}-${index}`}
+                  draft={draft}
+                  index={index}
+                  fields={fields}
+                  filterGroups={filterGroups}
+                  disableRemove={drafts.length === 1}
+                  onChange={(nextDraft) => setDrafts((current) => current.map((item, itemIndex) => (itemIndex === index ? nextDraft : item)))}
+                  onRemove={() => setDrafts((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                />
+              ))}
+            </div>
 
-            return (
-              <div key={`${draft.id}-${index}`} className="workspace-dialog__list-item workspace-dialog__list-item--filter">
-                <label className="workspace-dialog__field">
-                  <span>{ruleTypeLabel}</span>
-                  <select
-                    aria-label={ruleTypeLabel}
-                    value={draft.type}
-                    onChange={(event) =>
-                      setDrafts((current) =>
-                        current.map((item, itemIndex) => {
-                          if (itemIndex !== index) {
-                            return item;
-                          }
-                          return event.target.value === "filter_group"
-                            ? { ...item, type: "filter_group", fieldId: "", textValue: "", multiValue: [], filterGroupId: filterGroups[0]?.id ?? "" }
-                            : createDefaultDraft(availableFields, index);
-                        }),
-                      )
-                    }
-                  >
-                    <option value="field">字段条件</option>
-                    <option value="filter_group">应用筛选组</option>
-                  </select>
-                </label>
-
-                {draft.type === "filter_group" ? (
-                  <label className="workspace-dialog__field">
-                    <span>{groupLabel}</span>
-                    <select
-                      aria-label={groupLabel}
-                      value={draft.filterGroupId}
-                      onChange={(event) =>
-                        setDrafts((current) =>
-                          current.map((item, itemIndex) => (itemIndex === index ? { ...item, filterGroupId: event.target.value } : item)),
-                        )
-                      }
-                    >
-                      <option value="">请选择筛选组</option>
-                      {filterGroups.map((group) => (
-                        <option key={group.id} value={group.id}>
-                          {group.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : (
-                  <>
-                    <label className="workspace-dialog__field">
-                      <span>{fieldLabel}</span>
-                      <select
-                        aria-label={fieldLabel}
-                        value={draft.fieldId}
-                        onChange={(event) =>
-                          setDrafts((current) =>
-                            current.map((item, itemIndex) => {
-                              if (itemIndex !== index) {
-                                return item;
-                              }
-                              const nextField = availableFields.find((field) => field.id === event.target.value);
-                              return {
-                                ...item,
-                                fieldId: event.target.value,
-                                operator: operatorOptions(nextField)[0].value,
-                                textValue: "",
-                                multiValue: [],
-                              };
-                            }),
-                          )
-                        }
-                      >
-                        {availableFields.map((field) => (
-                          <option key={field.id} value={field.id}>
-                            {field.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="workspace-dialog__field">
-                      <span>{operatorLabel}</span>
-                      <select
-                        aria-label={operatorLabel}
-                        value={draft.operator}
-                        onChange={(event) =>
-                          setDrafts((current) =>
-                            current.map((item, itemIndex) => (itemIndex === index ? { ...item, operator: event.target.value as DraftCondition["operator"] } : item)),
-                          )
-                        }
-                      >
-                        {operators.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="workspace-dialog__field">
-                      <span>{valueLabel}</span>
-                      {selectedField?.type === "multi_select" ? (
-                        <select
-                          multiple
-                          aria-label={valueLabel}
-                          value={draft.multiValue}
-                          onChange={(event) =>
-                            setDrafts((current) =>
-                              current.map((item, itemIndex) =>
-                                itemIndex === index
-                                  ? { ...item, multiValue: [...event.currentTarget.selectedOptions].map((option) => option.value) }
-                                  : item,
-                              ),
-                            )
-                          }
-                        >
-                          {selectedField.options.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          aria-label={valueLabel}
-                          type={selectedField?.type === "number" ? "number" : "text"}
-                          disabled={valueDisabled}
-                          placeholder={valueDisabled ? "无需填写" : undefined}
-                          value={draft.textValue}
-                          onChange={(event) =>
-                            setDrafts((current) => current.map((item, itemIndex) => (itemIndex === index ? { ...item, textValue: event.target.value } : item)))
-                          }
-                        />
-                      )}
-                    </label>
-                  </>
-                )}
-
-                <button
-                  type="button"
-                  className="button-secondary"
-                  disabled={drafts.length === 1}
-                  onClick={() => setDrafts((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-                >
-                  删除规则
-                </button>
-              </div>
-            );
-          })}
-        </div>
+            <div className="workspace-dialog__list-actions">
+              <button type="button" className="button-secondary" onClick={() => setDrafts((current) => [...current, createDefaultDraft(fields, current.length)])}>
+                添加规则
+              </button>
+            </div>
+          </>
+        ) : (
+          <FilterGroupConfigMenu
+            drafts={groupDrafts}
+            fields={fields}
+            filterGroups={filterGroups}
+            selectedGroupId={selectedGroupId}
+            status={configStatus}
+            onBack={() => setView("rules")}
+            onDraftAdd={() => setGroupDrafts((current) => [...current, createDefaultDraft(fields, current.length)])}
+            onDraftChange={(index, nextDraft) =>
+              setGroupDrafts((current) => current.map((item, itemIndex) => (itemIndex === index ? nextDraft : item)))
+            }
+            onDraftRemove={(index) => setGroupDrafts((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+            onLoad={handleLoadFilterGroup}
+            onSave={handleSaveFilterGroup}
+            onSaveAs={handleSaveAsFilterGroup}
+            onSelectedGroupChange={(groupId) => {
+              selectGroupForConfig(groupId);
+              setConfigStatus("");
+            }}
+          />
+        )}
 
         <div className="dialog-panel__actions">
-          <button type="button" className="button-secondary" onClick={() => setDrafts((current) => [...current, createDefaultDraft(availableFields, current.length)])}>
-            添加规则
-          </button>
-          <button type="button" className="button-secondary" onClick={() => setDrafts([createDefaultDraft(availableFields)])}>
+          {view === "rules" ? (
+            <button type="button" className="button-secondary" onClick={() => setView("groups")}>
+              配置筛选组
+            </button>
+          ) : null}
+          <button type="button" className="button-secondary" onClick={() => setDrafts([createDefaultDraft(fields)])}>
             清空
-          </button>
-          <button type="button" className="button-secondary" onClick={() => void handleSaveAsFilterGroup()}>
-            保存为筛选组
           </button>
           <button type="button" className="button-secondary" onClick={onClose}>
             取消
@@ -259,7 +214,7 @@ export function FilterDialog({ open, fields, conditionRoot, onClose, onApply, on
           <button
             type="button"
             onClick={() => {
-              onApply(buildConditionRootFromDrafts(availableFields, drafts));
+              onApply(buildConditionRootFromDrafts(fields, drafts));
               onClose();
             }}
           >

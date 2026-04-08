@@ -15,9 +15,9 @@ const SEARCH_ONLY_FIELD_IDS = new Set([
 
 const BUILTIN_FIELDS: WorkspaceFieldDefinition[] = [
   { id: "fileName", label: "文件名", source: "builtin", type: "string", options: [], visible: true, width: 220, editable: false },
-  { id: "bindingStatus", label: "文件状态", source: "builtin", type: "string", options: ["readable", "needs_reparse", "unreadable"], visible: true, width: 140, editable: false },
-  { id: "parseStatus", label: "识别状态", source: "builtin", type: "string", options: ["idle", "parsed", "parse_failed", "needs_reparse"], visible: true, width: 140, editable: false },
-  { id: "conflictStatus", label: "冲突状态", source: "builtin", type: "string", options: ["none", "same_number_diff_hash"], visible: true, width: 160, editable: false },
+  { id: "bindingStatus", label: "文件状态", source: "builtin", type: "single_select", options: ["readable", "needs_reparse", "unreadable"], visible: true, width: 140, editable: false },
+  { id: "parseStatus", label: "识别状态", source: "builtin", type: "single_select", options: ["idle", "parsed", "parse_failed", "needs_reparse"], visible: true, width: 140, editable: false },
+  { id: "conflictStatus", label: "冲突状态", source: "builtin", type: "single_select", options: ["none", "same_number_diff_hash", "same_hash_diff_invoice_data"], visible: true, width: 160, editable: false },
   { id: "conflictMessage", label: "冲突说明", source: "builtin", type: "string", options: [], visible: false, width: 220, editable: false },
   { id: "invoiceNumber", label: "发票号码", source: "builtin", type: "string", options: [], visible: true, width: 180, editable: true },
   { id: "invoiceCode", label: "发票代码", source: "builtin", type: "string", options: [], visible: true, width: 180, editable: true },
@@ -33,8 +33,8 @@ const BUILTIN_FIELDS: WorkspaceFieldDefinition[] = [
   { id: "ocrParsedAt", label: "OCR时间", source: "builtin", type: "number", options: [], visible: false, width: 180, editable: false },
   { id: "uploader", label: "上传人", source: "builtin", type: "string", options: [], visible: false, width: 160, editable: true },
   { id: "owner", label: "归属人", source: "builtin", type: "string", options: [], visible: false, width: 160, editable: true },
-  { id: "sourceType", label: "来源方式", source: "builtin", type: "string", options: ["ocr", "manual"], visible: false, width: 140, editable: false },
-  { id: "edited", label: "已编辑", source: "builtin", type: "string", options: ["是", "否"], visible: false, width: 120, editable: false },
+  { id: "sourceType", label: "来源方式", source: "builtin", type: "single_select", options: ["ocr", "manual"], visible: false, width: 140, editable: false },
+  { id: "edited", label: "已编辑", source: "builtin", type: "single_select", options: ["是", "否"], visible: false, width: 120, editable: false },
   { id: "createdAt", label: "创建时间", source: "builtin", type: "number", options: [], visible: false, width: 180, editable: false },
   { id: "updatedAt", label: "更新时间", source: "builtin", type: "number", options: [], visible: false, width: 180, editable: false },
   { id: "itemBrief", label: "商品简介", source: "builtin", type: "string", options: [], visible: false, width: 260, editable: false },

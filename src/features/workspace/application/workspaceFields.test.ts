@@ -66,6 +66,19 @@ describe("buildWorkspaceFields", () => {
     expect(fields.find((field) => field.id === "ocrParsedAt")?.type).toBe("number");
   });
 
+  test("marks fixed-option system fields as single-select for filter dialogs", () => {
+    const fields = buildWorkspaceFields({
+      tagGroups: [],
+      tagGroupLinks: [],
+    });
+
+    expect(fields.find((field) => field.id === "bindingStatus")?.type).toBe("single_select");
+    expect(fields.find((field) => field.id === "parseStatus")?.type).toBe("single_select");
+    expect(fields.find((field) => field.id === "conflictStatus")?.type).toBe("single_select");
+    expect(fields.find((field) => field.id === "sourceType")?.type).toBe("single_select");
+    expect(fields.find((field) => field.id === "edited")?.type).toBe("single_select");
+  });
+
   test("does not expose low-level binding errors as a workspace field", () => {
     const fields = buildWorkspaceFields({
       tagGroups: [],
