@@ -80,6 +80,8 @@ async function seedDashboardState(
     handleRef: string;
     invoiceNumber: string;
     fileName: string;
+    ocrVendor?: string | null;
+    edited?: boolean;
   }> = [{ id: "doc-1", handleRef: "handle-1", invoiceNumber: "INV-100", fileName: "demo.pdf" }],
 ) {
   await appDb.invoiceDocuments.clear();
@@ -104,7 +106,7 @@ async function seedDashboardState(
       handleRef: row.handleRef,
       bindingStatus: "readable" as const,
       bindingErrorType: null,
-      ocrVendor: null,
+      ocrVendor: row.ocrVendor ?? null,
       ocrParsedAt: null,
       parseStatus: "parsed" as const,
       conflictStatus: "none" as const,
@@ -123,7 +125,7 @@ async function seedDashboardState(
       uploader: "",
       owner: "",
       sourceType: "ocr" as const,
-      edited: false,
+      edited: row.edited ?? false,
       createdAt: "2026-03-30T00:00:00.000Z",
       updatedAt: "2026-03-30T00:00:00.000Z",
     })),
@@ -312,6 +314,32 @@ describe("Dashboard", () => {
           message: "批量 OCR 完成：共 2 条，成功 1，失败 1，跳过 0。",
         }),
       ),
+    );
+  });
+
+  it("skips batch OCR when the selected provider already parsed the invoice and it was not edited", async () => {
+    const user = userEvent.setup();
+
+    await seedDashboardState([
+      { id: "doc-1", handleRef: "handle-1", invoiceNumber: "INV-100", fileName: "one.pdf", ocrVendor: "tencent", edited: false },
+      { id: "doc-2", handleRef: "handle-2", invoiceNumber: "INV-200", fileName: "two.pdf", ocrVendor: "tencent", edited: true },
+    ]);
+
+    render(<Dashboard />);
+
+    await waitFor(() => expect(screen.getByTestId("workspace-count")).toHaveTextContent("2"));
+    await waitFor(() => expect(screen.getByTestId("workspace-message")).toHaveTextContent("本地工作台数据已加载。"));
+    await user.click(screen.getByRole("button", { name: "触发批量 OCR" }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId("workspace-message")).toHaveTextContent("批量 OCR 完成：共 2 条，成功 1，失败 0，跳过 1。"),
+    );
+    expect(mockDeps.parseInvoiceMock).toHaveBeenCalledTimes(1);
+    expect(mockDeps.parseInvoiceMock).toHaveBeenCalledWith(
+      "doc-2",
+      expect.objectContaining({
+        vendor: "tencent",
+      }),
     );
   });
 });

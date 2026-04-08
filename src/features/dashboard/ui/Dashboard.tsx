@@ -143,9 +143,13 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
 
   const handleBulkReparseInvoices = async (invoiceDocumentIds: string[]) => {
     const targetRows = invoiceDocuments.filter((row) => invoiceDocumentIds.includes(row.id));
+    const ocrConfig = toOcrClientConfig(await loadDashboardOcrSettings());
+    const baseSkippedCount = targetRows.filter((row) => row.ocrVendor === ocrConfig.vendor && !row.edited).length;
+    const actionableRows = targetRows.filter((row) => row.ocrVendor !== ocrConfig.vendor || row.edited);
+
     setDashboardMessage(`开始批量 OCR：共 ${targetRows.length} 条。`);
     const result = await batchParseInvoices(
-      targetRows,
+      actionableRows,
       (invoiceDocumentId) =>
         handleParseInvoice(invoiceDocumentId, {
           start: null,
@@ -154,11 +158,13 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
         }),
       (progress) => {
         setDashboardMessage(
-          `批量 OCR 进行中：共 ${progress.totalCount} 条，已处理 ${progress.completedCount} 条，成功 ${progress.parsedCount}，失败 ${progress.failedCount}，跳过 ${progress.skippedCount}。`,
+          `批量 OCR 进行中：共 ${targetRows.length} 条，已处理 ${progress.completedCount + baseSkippedCount} 条，成功 ${progress.parsedCount}，失败 ${progress.failedCount}，跳过 ${progress.skippedCount + baseSkippedCount}。`,
         );
       },
     );
-    setDashboardMessage(`批量 OCR 完成：共 ${targetRows.length} 条，成功 ${result.parsedIds.length}，失败 ${result.failedIds.length}，跳过 ${result.skippedIds.length}。`);
+    setDashboardMessage(
+      `批量 OCR 完成：共 ${targetRows.length} 条，成功 ${result.parsedIds.length}，失败 ${result.failedIds.length}，跳过 ${result.skippedIds.length + baseSkippedCount}。`,
+    );
   };
 
   const handleSaveEdits = async (values: InvoiceEditValues) => {
