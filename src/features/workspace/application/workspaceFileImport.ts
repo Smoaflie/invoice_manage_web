@@ -8,19 +8,28 @@ function isPdfFile(file: File) {
   return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
 }
 
+function buildFileKey(file: File) {
+  return `${file.name}::${file.size}::${file.lastModified}`;
+}
+
 export async function collectDroppedFiles(dataTransfer: DataTransfer | null): Promise<PickedFile[]> {
   if (!dataTransfer) {
     return [];
   }
 
-  const items = Array.from(dataTransfer.items ?? []) as FileItemWithHandle[];
-  if (items.length === 0) {
-    return Array.from(dataTransfer.files ?? [])
-      .filter(isPdfFile)
-      .map((file) => ({ file, handle: null }));
+  const pickedFiles = new Map<string, PickedFile>();
+  for (const file of Array.from(dataTransfer.files ?? [])) {
+    if (!isPdfFile(file)) {
+      continue;
+    }
+
+    pickedFiles.set(buildFileKey(file), { file, handle: null });
   }
 
-  const pickedFiles: PickedFile[] = [];
+  const items = Array.from(dataTransfer.items ?? []) as FileItemWithHandle[];
+  if (items.length === 0) {
+    return [...pickedFiles.values()];
+  }
 
   for (const item of items) {
     if (item.kind !== "file") {
@@ -33,11 +42,11 @@ export async function collectDroppedFiles(dataTransfer: DataTransfer | null): Pr
     }
 
     const handle = item.getAsFileSystemHandle ? await item.getAsFileSystemHandle() : null;
-    pickedFiles.push({
+    pickedFiles.set(buildFileKey(file), {
       file,
       handle: handle?.kind === "file" ? (handle as FileSystemFileHandle) : null,
     });
   }
 
-  return pickedFiles;
+  return [...pickedFiles.values()];
 }
