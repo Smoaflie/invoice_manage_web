@@ -112,7 +112,7 @@ describe("importData", () => {
     });
   });
 
-  it("ignores removed ocr.language settings from older exports", async () => {
+  it("ignores removed and unsupported settings from older exports", async () => {
     const result = await importData({
       invoiceDocuments: [buildTransferInvoiceDocument({ id: "doc-legacy-setting", contentHash: "hash-legacy-setting", fileName: "legacy.pdf" })],
       invoiceAuditLogs: [],
@@ -144,6 +144,14 @@ describe("importData", () => {
       ],
       settings: [
         { key: "ocr.language", value: "zh-CN", updatedAt: "2026-03-30T00:00:00.000Z" } as never,
+        {
+          key: "ui.workspaceViewDraft.workspace-view-1",
+          value: {
+            query: { scope: "workspace", searchText: "", filters: [], sorts: [], groupBy: null },
+            visibleColumns: ["fileName"],
+          },
+          updatedAt: "2026-03-30T00:00:00.000Z",
+        } as never,
         { key: "ocr.vendor", value: "baidu", updatedAt: "2026-03-30T00:00:00.000Z" },
       ],
     });

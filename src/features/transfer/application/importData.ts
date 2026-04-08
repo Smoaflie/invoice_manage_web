@@ -7,11 +7,12 @@ import type { FilterGroup, FilterGroupRule } from "../../../shared/types/filterG
 import type { SavedView } from "../../../shared/types/savedView";
 import type { SettingRecord } from "../../../shared/types/settings";
 import type { TagDefinition, TagGroup, TagGroupLink } from "../../../shared/types/tagDefinition";
-import { legacyTransferDataSchema, transferDataSchema } from "../../../shared/validation/schemas";
+import { legacyTransferDataSchema, settingsKeySchema, transferDataSchema } from "../../../shared/validation/schemas";
 import { migrateLegacyTables } from "../../documents/application/migrateLegacyTables";
 import { buildImportPlan, type ImportConflict } from "./importDataConflicts";
 
 const WEB_ONLY_OCR_SECRET_KEYS = new Set(["ocr.baiduApiKey", "ocr.baiduSecretKey", "ocr.tencentSecretId", "ocr.tencentSecretKey"]);
+const IMPORTABLE_SETTING_KEYS = new Set(settingsKeySchema.options);
 
 export type ImportDataPayload = {
   invoiceDocuments?: Array<Omit<InvoiceDocument, "handleRef" | "bindingStatus" | "bindingErrorType">>;
@@ -47,7 +48,14 @@ function sanitizeImportedPayload(payload: unknown) {
 
   const rawPayload = payload as { settings?: unknown; invoiceDocuments?: unknown };
   const settings = Array.isArray(rawPayload.settings)
-    ? rawPayload.settings.filter((setting) => !(setting && typeof setting === "object" && "key" in setting && setting.key === "ocr.language"))
+    ? rawPayload.settings.filter((setting) => {
+        if (!(setting && typeof setting === "object" && "key" in setting)) {
+          return true;
+        }
+
+        const key = setting.key;
+        return typeof key === "string" && key !== "ocr.language" && IMPORTABLE_SETTING_KEYS.has(key as (typeof settingsKeySchema.options)[number]);
+      })
     : rawPayload.settings;
   const invoiceDocuments = Array.isArray(rawPayload.invoiceDocuments)
     ? rawPayload.invoiceDocuments.map((entry) =>
