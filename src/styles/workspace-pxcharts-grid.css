@@ -128,35 +128,30 @@
 
 .table-column-resize-handle {
   position: absolute;
-  top: 6px;
+  top: 50%;
   right: -6px;
   width: 14px;
-  height: calc(100% - 12px);
+  height: 1.3em;
   padding: 0;
   border: 0;
-  border-radius: 999px;
+  border-left: 2px solid #2563eb;
+  border-radius: 0;
   background: transparent;
   box-shadow: none;
+  outline: none;
   cursor: col-resize;
+  box-sizing: border-box;
+  transition: none;
+  transform: translateY(-50%);
 }
 
-.table-column-resize-handle::before {
-  content: "";
-  position: absolute;
-  top: 1px;
-  bottom: 1px;
-  left: 50%;
-  width: 2px;
-  border-radius: 999px;
-  transform: translateX(-50%);
-  background: rgba(100, 116, 139, 0.75);
-  transition: background-color 0.16s ease, box-shadow 0.16s ease;
-}
-
-.table-column-resize-handle:hover::before,
-.table-column-resize-handle:focus::before {
-  background: #2563eb;
-  box-shadow: 0 0 0 1px rgba(219, 234, 254, 0.9);
+button.table-column-resize-handle:hover:not(:disabled),
+button.table-column-resize-handle:focus,
+button.table-column-resize-handle:focus-visible,
+button.table-column-resize-handle:active {
+  box-shadow: none;
+  outline: none;
+  transform: translateY(-50%);
 }
 
 .table-column-resize-guide {
