@@ -15,6 +15,10 @@ vi.mock("../../filters/ui/RegexFilterGroupPanel", () => ({
   RegexFilterGroupPanel: () => <div>Mock regex filter group</div>,
 }));
 
+vi.mock("../../settings/ui/UserSettingsForm", () => ({
+  UserSettingsForm: () => <div>Mock user settings form</div>,
+}));
+
 afterEach(() => {
   cleanup();
 });
@@ -27,5 +31,6 @@ describe("SettingsWorkspace", () => {
 
     expect(screen.getByText("示例网站提示")).toBeInTheDocument();
     expect(screen.getByText("我们不会存储你的 API Key。后端只负责把请求转发到目标 OCR 服务以处理 CORS。")).toBeInTheDocument();
+    expect(screen.getByText("Mock user settings form")).toBeInTheDocument();
   });
 });

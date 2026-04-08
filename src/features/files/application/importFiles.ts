@@ -2,6 +2,7 @@ import { appDb } from "../../../shared/db/appDb";
 import { hashFile } from "../../../shared/hash/hashFile";
 import { persistFileHandle } from "../../../shared/fs/fileHandles";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
+import { loadUserNameSetting } from "../../settings/application/userSettings";
 
 export type PickedFile = {
   file: File;
@@ -18,7 +19,7 @@ type ImportResult = {
   rebound: InvoiceDocument[];
 };
 
-function buildEntry(file: File, contentHash: string, handleRef: string, now: string): InvoiceDocument {
+function buildEntry(file: File, contentHash: string, handleRef: string, uploader: string, now: string): InvoiceDocument {
   return {
     id: globalThis.crypto.randomUUID(),
     contentHash,
@@ -44,7 +45,7 @@ function buildEntry(file: File, contentHash: string, handleRef: string, now: str
     items: [],
     tags: [],
     annotation: "",
-    uploader: "",
+    uploader,
     owner: "",
     sourceType: "ocr",
     edited: false,
@@ -64,6 +65,7 @@ async function persistHandleRef(handle: FileSystemFileHandle | null, persistHand
 export async function importFiles(pickedFiles: PickedFile[], options: ImportOptions): Promise<ImportResult> {
   const created: InvoiceDocument[] = [];
   const rebound: InvoiceDocument[] = [];
+  const uploader = await loadUserNameSetting();
 
   for (const picked of pickedFiles) {
     const contentHash = await hashFile(picked.file);
@@ -96,7 +98,7 @@ export async function importFiles(pickedFiles: PickedFile[], options: ImportOpti
         return;
       }
 
-      const entry = buildEntry(picked.file, contentHash, handleRef, timestamp);
+      const entry = buildEntry(picked.file, contentHash, handleRef, uploader, timestamp);
       await appDb.invoiceDocuments.add(entry);
       created.push(entry);
     });

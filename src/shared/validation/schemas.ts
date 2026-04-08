@@ -170,6 +170,7 @@ export const settingsKeySchema = z.enum([
   "ocr.tencentSecretId",
   "ocr.tencentSecretKey",
   "app.theme",
+  "app.userName",
   "app.lastOpenedFolder",
   "ui.invoiceColumns",
   "ui.activeInvoiceViewId",
@@ -188,7 +189,14 @@ export const ocrSettingsSchema = z.object({
   tencentSecretKey: z.string().nullable(),
 });
 
-export const appSettingsSchema = z.object({ ocr: ocrSettingsSchema, app: z.object({ theme: z.enum(["system", "light", "dark"]), lastOpenedFolder: z.string().nullable() }) });
+export const appSettingsSchema = z.object({
+  ocr: ocrSettingsSchema,
+  app: z.object({
+    theme: z.enum(["system", "light", "dark"]),
+    userName: z.string(),
+    lastOpenedFolder: z.string().nullable(),
+  }),
+});
 
 const ocrVendorSettingRecordSchema = z.object({ key: z.literal("ocr.vendor"), value: z.string().nullable(), updatedAt: z.string() });
 const ocrEnabledSettingRecordSchema = z.object({ key: z.literal("ocr.enabled"), value: z.boolean(), updatedAt: z.string() });
@@ -197,6 +205,7 @@ const ocrBaiduSecretKeySettingRecordSchema = z.object({ key: z.literal("ocr.baid
 const ocrTencentSecretIdSettingRecordSchema = z.object({ key: z.literal("ocr.tencentSecretId"), value: z.string().nullable(), updatedAt: z.string() });
 const ocrTencentSecretKeySettingRecordSchema = z.object({ key: z.literal("ocr.tencentSecretKey"), value: z.string().nullable(), updatedAt: z.string() });
 const appThemeSettingRecordSchema = z.object({ key: z.literal("app.theme"), value: z.enum(["system", "light", "dark"]), updatedAt: z.string() });
+const appUserNameSettingRecordSchema = z.object({ key: z.literal("app.userName"), value: z.string(), updatedAt: z.string() });
 const appLastOpenedFolderSettingRecordSchema = z.object({ key: z.literal("app.lastOpenedFolder"), value: z.string().nullable(), updatedAt: z.string() });
 const uiInvoiceColumnsSettingRecordSchema = z.object({ key: z.literal("ui.invoiceColumns"), value: z.array(z.string()), updatedAt: z.string() });
 const uiActiveInvoiceViewIdSettingRecordSchema = z.object({ key: z.literal("ui.activeInvoiceViewId"), value: z.string().nullable(), updatedAt: z.string() });
@@ -213,6 +222,7 @@ export const settingRecordSchema = z.discriminatedUnion("key", [
   ocrTencentSecretIdSettingRecordSchema,
   ocrTencentSecretKeySettingRecordSchema,
   appThemeSettingRecordSchema,
+  appUserNameSettingRecordSchema,
   appLastOpenedFolderSettingRecordSchema,
   uiInvoiceColumnsSettingRecordSchema,
   uiActiveInvoiceViewIdSettingRecordSchema,

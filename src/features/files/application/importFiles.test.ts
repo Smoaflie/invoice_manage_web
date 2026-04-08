@@ -152,4 +152,33 @@ describe("importFiles", () => {
       bindingStatus: "unreadable",
     });
   });
+
+  it("uses the local uploader name by default for new invoice documents", async () => {
+    const file = new File(["new-content"], "new.pdf", { type: "application/pdf" });
+
+    const result = await importFiles([{ file, handle: null }], {
+      persistHandle: vi.fn(),
+      now: () => "2026-03-30T00:00:00.000Z",
+    });
+
+    expect(result.created).toHaveLength(1);
+    expect(result.created[0]).toMatchObject({
+      uploader: "local",
+    });
+  });
+
+  it("uses the saved user name for newly imported invoice documents", async () => {
+    const file = new File(["new-content"], "named.pdf", { type: "application/pdf" });
+    await appDb.settings.put({ key: "app.userName", value: "Alice", updatedAt: "2026-03-30T00:00:00.000Z" });
+
+    const result = await importFiles([{ file, handle: null }], {
+      persistHandle: vi.fn(),
+      now: () => "2026-03-30T00:00:00.000Z",
+    });
+
+    expect(result.created).toHaveLength(1);
+    expect(result.created[0]).toMatchObject({
+      uploader: "Alice",
+    });
+  });
 });

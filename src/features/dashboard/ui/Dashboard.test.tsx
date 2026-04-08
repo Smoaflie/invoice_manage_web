@@ -25,6 +25,10 @@ vi.mock("../../settings/ui/OcrSettingsForm", () => ({
   OcrSettingsForm: () => <div>Mock OCR settings form</div>,
 }));
 
+vi.mock("../../settings/ui/UserSettingsForm", () => ({
+  UserSettingsForm: () => <div>Mock user settings form</div>,
+}));
+
 vi.mock("../../workspace/ui/InvoiceWorkspace", () => ({
   InvoiceWorkspace: ({
     view,

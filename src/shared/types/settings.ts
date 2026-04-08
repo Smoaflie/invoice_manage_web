@@ -6,6 +6,7 @@ export type SettingsKey =
   | "ocr.tencentSecretId"
   | "ocr.tencentSecretKey"
   | "app.theme"
+  | "app.userName"
   | "app.lastOpenedFolder"
   | "ui.invoiceColumns"
   | "ui.activeInvoiceViewId"
@@ -22,6 +23,7 @@ export interface SettingsValueMap {
   "ocr.tencentSecretId": string | null;
   "ocr.tencentSecretKey": string | null;
   "app.theme": "system" | "light" | "dark";
+  "app.userName": string;
   "app.lastOpenedFolder": string | null;
   "ui.invoiceColumns": string[];
   "ui.activeInvoiceViewId": string | null;
@@ -54,6 +56,7 @@ export type AppSettings = {
   };
   app: {
     theme: "system" | "light" | "dark";
+    userName: string;
     lastOpenedFolder: string | null;
   };
   ui: {

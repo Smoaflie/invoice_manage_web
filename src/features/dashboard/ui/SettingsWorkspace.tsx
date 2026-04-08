@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { isDemoBuild } from "../../../app/runtimeConfig";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
 import { RegexFilterGroupPanel } from "../../filters/ui/RegexFilterGroupPanel";
+import { UserSettingsForm } from "../../settings/ui/UserSettingsForm";
 import { TagManagerPanel } from "../../tags/ui/TagManagerPanel";
 
 type SettingsWorkspaceProps = {
@@ -27,6 +28,17 @@ export function SettingsWorkspace({ settingsForm, invoiceDocuments }: SettingsWo
       </div>
 
       <div className="workspace-grid workspace-grid--settings-modules">
+        <section className="workspace-card workspace-card--settings-form">
+          <div className="workspace-card__header">
+            <div>
+              <p className="workspace-card__eyebrow">用户偏好</p>
+              <h2>使用者设置</h2>
+              <p className="workspace-card__copy">设置当前浏览器默认使用者名字，供新导入记录自动带入上传者。</p>
+            </div>
+          </div>
+          <UserSettingsForm />
+        </section>
+
         <section className="workspace-card workspace-card--settings-form">
           <div className="workspace-card__header">
             <div>
