@@ -173,6 +173,27 @@ describe("WorkspaceTable", () => {
     expect(checkboxes.at(-1)).toBeChecked();
   });
 
+  test("pins selected rows to the top within the same group", () => {
+    const orderedRows = buildWorkspaceRowStates(
+      [
+        { ...rows[0], id: "doc-1", invoiceNumber: "INV-001", buyerName: "甲方" },
+        { ...rows[0], id: "doc-2", invoiceNumber: "INV-002", buyerName: "乙方", updatedAt: "2026-03-31T01:00:00.000Z" },
+      ],
+      fields,
+    );
+
+    const { container } = renderWorkspaceTable({
+      groups: [{ id: "all", name: "全部记录", rows: orderedRows }],
+      expandedGroupIds: ["all"],
+      selectedIdSet: new Set(["doc-2"]),
+    });
+
+    const renderedRows = Array.from(container.querySelectorAll(".table-data-row"));
+    expect(renderedRows).toHaveLength(2);
+    expect(within(renderedRows[0] as HTMLElement).getByDisplayValue("INV-002")).toBeInTheDocument();
+    expect(within(renderedRows[1] as HTMLElement).getByDisplayValue("INV-001")).toBeInTheDocument();
+  });
+
   test("resizes adjacent record columns through header handles", () => {
     const onRecordColumnWidthsChange = vi.fn();
 

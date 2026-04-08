@@ -35,6 +35,20 @@ function orderedFields(fieldsById: Map<string, WorkspaceFieldDefinition>, fieldO
     .filter((field): field is WorkspaceFieldDefinition => Boolean(field));
 }
 
+function prioritizeSelectedGroups(groups: ReferenceWorkspaceGroup[], selectedIdSet: Set<string>) {
+  return groups.map((group) => {
+    const selectedRows = group.rows.filter((row) => selectedIdSet.has(row.id));
+    if (selectedRows.length === 0 || selectedRows.length === group.rows.length) {
+      return group;
+    }
+
+    return {
+      ...group,
+      rows: [...selectedRows, ...group.rows.filter((row) => !selectedIdSet.has(row.id))],
+    };
+  });
+}
+
 const RowActions = memo(function RowActions(props: Pick<WorkspaceTableProps, "onOpenDetails" | "onEdit" | "onOpenPdf" | "onDelete" | "onReparse"> & { rowId: string }) {
   return (
     <div className="workspace-row-actions task-table-actions">
@@ -134,12 +148,13 @@ export function WorkspaceTable(props: WorkspaceTableProps) {
   const fieldsById = useMemo(() => new Map(props.fields.map((field) => [field.id, field])), [props.fields]);
   const visibleFields = useMemo(() => orderedFields(fieldsById, props.fieldOrder), [fieldsById, props.fieldOrder]);
   const expandedGroupIdSet = useMemo(() => new Set(props.expandedGroupIds), [props.expandedGroupIds]);
+  const prioritizedGroups = useMemo(() => prioritizeSelectedGroups(props.groups, props.selectedIdSet), [props.groups, props.selectedIdSet]);
   const renderStateKey = useMemo(
-    () => props.groups.map((group) => `${group.id}:${group.rows.length}:${expandedGroupIdSet.has(group.id) ? "1" : "0"}`).join("|"),
-    [expandedGroupIdSet, props.groups],
+    () => prioritizedGroups.map((group) => `${group.id}:${group.rows.length}:${expandedGroupIdSet.has(group.id) ? "1" : "0"}`).join("|"),
+    [expandedGroupIdSet, prioritizedGroups],
   );
   const [scrollTop, setScrollTop] = useState(0);
-  const virtualContent = useMemo(() => buildWorkspaceVirtualItems(props.groups, expandedGroupIdSet), [expandedGroupIdSet, props.groups]);
+  const virtualContent = useMemo(() => buildWorkspaceVirtualItems(prioritizedGroups, expandedGroupIdSet), [expandedGroupIdSet, prioritizedGroups]);
   const visibleItems = useMemo(() => selectWorkspaceVirtualItems(virtualContent.items, scrollTop), [scrollTop, virtualContent.items]);
 
   useEffect(() => {
