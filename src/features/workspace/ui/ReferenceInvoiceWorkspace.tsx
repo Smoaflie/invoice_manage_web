@@ -74,6 +74,8 @@ export function ReferenceInvoiceWorkspace(props: ReferenceInvoiceWorkspaceProps)
           viewFieldLabel={props.view === "kanban" ? "看板字段" : undefined}
           onImportDataFile={controller.handleImportDataFile}
           onExportData={controller.handleExportData}
+          onExportMergedPdf={controller.handleExportMergedPdf}
+          onExportZip={controller.handleExportZip}
           onExportExcel={controller.handleExportExcel}
           showExportExcelButton={props.view === "records"}
           onDeleteSelected={controller.handleDeleteSelected}

@@ -5,9 +5,13 @@ import type { InvoiceAuditLog } from "../../../shared/types/invoiceAuditLog";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
 import { batchParseInvoices } from "../../documents/application/batchParseInvoices";
 import { deleteInvoiceDocuments } from "../../documents/application/deleteInvoiceDocuments";
+import { exportInvoiceBundle } from "../../documents/application/invoiceBundleExport";
+import { exportMergedPdf } from "../../documents/application/exportMergedPdf";
+import { prepareInvoicePdfExport, type InvoiceBundleNamingMode } from "../../documents/application/invoicePdfExport";
 import { rehydrateBindings } from "../../files/application/rehydrateBindings";
 import { parseInvoice } from "../../ocr/application/parseInvoice";
 import { requestInvoiceOcr } from "../../ocr/infrastructure/ocrClients";
+import { exportData } from "../../transfer/application/exportData";
 import { InvoiceDetailsDrawer } from "../../invoices/ui/InvoiceDetailsDrawer";
 import { InvoiceEditDialog, type InvoiceEditValues } from "../../invoices/ui/InvoiceEditDialog";
 import { OcrSettingsForm } from "../../settings/ui/OcrSettingsForm";
@@ -74,6 +78,50 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
       await openStoredInvoicePdf(invoiceDocumentId);
     } catch (error) {
       setDashboardMessage(error instanceof Error ? error.message : "打开 PDF 失败。");
+    }
+  };
+
+  const selectedInvoiceDocuments = (invoiceDocumentIds: string[]) => invoiceDocuments.filter((row) => invoiceDocumentIds.includes(row.id));
+
+  const handleExportMergedPdf = async (invoiceDocumentIds: string[]) => {
+    if (invoiceDocumentIds.length === 0) {
+      return;
+    }
+
+    try {
+      const prepared = await prepareInvoicePdfExport(selectedInvoiceDocuments(invoiceDocumentIds), {
+        loadFile: loadFileFromStoredHandle,
+      });
+      await exportMergedPdf(prepared.entries.map((entry) => entry.file), "selected-invoices.pdf");
+      setDashboardMessage(`已导出 ${prepared.entries.length} 条发票的合并 PDF。`);
+    } catch (error) {
+      setDashboardMessage(error instanceof Error ? error.message : "导出合并 PDF 失败。");
+    }
+  };
+
+  const handleExportZip = async (invoiceDocumentIds: string[], bundleNamingMode: InvoiceBundleNamingMode) => {
+    if (invoiceDocumentIds.length === 0) {
+      return;
+    }
+
+    try {
+      const prepared = await prepareInvoicePdfExport(selectedInvoiceDocuments(invoiceDocumentIds), {
+        loadFile: loadFileFromStoredHandle,
+        bundleNamingMode,
+      });
+      await exportInvoiceBundle(
+        {
+          jsonPayload: await exportData({ invoiceDocumentIds }),
+          pdfEntries: prepared.entries.map((entry) => ({
+            bundleFileName: entry.bundleFileName ?? entry.file.name,
+            file: entry.file,
+          })),
+        },
+        "selected-invoices.zip",
+      );
+      setDashboardMessage(`已导出 ${prepared.entries.length} 条发票的 ZIP 压缩包。`);
+    } catch (error) {
+      setDashboardMessage(error instanceof Error ? error.message : "导出压缩包失败。");
     }
   };
 
@@ -241,6 +289,8 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
           onOpenDetails={(invoiceDocumentId) => void openDetailDrawer(invoiceDocumentId)}
           onEdit={(invoiceDocumentId) => setEditSession({ invoiceDocumentId, mode: "manual-edit" })}
           onOpenPdf={handleOpenPdf}
+          onExportMergedPdf={handleExportMergedPdf}
+          onExportZip={handleExportZip}
           onDelete={handleDeleteDocuments}
           onReparseSingle={handleParseInvoice}
           onBulkReparse={handleBulkReparseInvoices}

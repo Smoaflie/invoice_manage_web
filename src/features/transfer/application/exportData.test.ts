@@ -150,4 +150,110 @@ describe("exportData", () => {
       }),
     );
   });
+
+  it("exports only selected structured invoice documents when invoice ids are provided", async () => {
+    await appDb.invoiceDocuments.bulkAdd([
+      {
+        id: "file-1",
+        contentHash: "hash-1",
+        fileName: "first.pdf",
+        fileSize: 123,
+        lastModified: 1,
+        handleRef: "handle-1",
+        bindingStatus: "readable",
+        bindingErrorType: null,
+        ocrVendor: null,
+        ocrParsedAt: null,
+        parseStatus: "parsed",
+        conflictStatus: "same_number_diff_hash",
+        conflictMessage: "冲突",
+        invoiceNumber: "INV-001",
+        invoiceCode: "",
+        invoiceDate: "",
+        totalAmount: 100,
+        taxAmount: 10,
+        amountWithoutTax: 90,
+        buyerName: "",
+        sellerName: "",
+        items: [],
+        tags: [],
+        remark: "first",
+        annotation: "",
+        uploader: "",
+        owner: "",
+        sourceType: "ocr",
+        edited: false,
+        createdAt: "2026-03-30T00:00:00.000Z",
+        updatedAt: "2026-03-30T00:00:00.000Z",
+      },
+      {
+        id: "file-2",
+        contentHash: "hash-2",
+        fileName: "second.pdf",
+        fileSize: 456,
+        lastModified: 2,
+        handleRef: "handle-2",
+        bindingStatus: "readable",
+        bindingErrorType: null,
+        ocrVendor: null,
+        ocrParsedAt: null,
+        parseStatus: "idle",
+        conflictStatus: "none",
+        conflictMessage: "",
+        invoiceNumber: "INV-002",
+        invoiceCode: "",
+        invoiceDate: "",
+        totalAmount: 200,
+        taxAmount: 20,
+        amountWithoutTax: 180,
+        buyerName: "",
+        sellerName: "",
+        items: [],
+        tags: [],
+        remark: "second",
+        annotation: "",
+        uploader: "",
+        owner: "",
+        sourceType: "ocr",
+        edited: false,
+        createdAt: "2026-03-30T00:00:00.000Z",
+        updatedAt: "2026-03-30T00:00:00.000Z",
+      },
+    ]);
+
+    await appDb.invoiceAuditLogs.add({
+      id: "audit-1",
+      invoiceDocumentId: "file-2",
+      changedAt: "2026-03-30T00:00:00.000Z",
+      changeType: "manual_annotation_update",
+      targetField: "annotation",
+      beforeValue: "",
+      afterValue: "需要复核",
+    });
+
+    await appDb.settings.put({
+      key: "app.theme",
+      value: "system",
+      updatedAt: "2026-03-30T00:00:00.000Z",
+    });
+
+    const payload = await exportData({ invoiceDocumentIds: ["file-2"] });
+
+    expect(payload.invoiceDocuments).toEqual([
+      expect.objectContaining({
+        id: "file-2",
+        fileName: "second.pdf",
+        invoiceNumber: "INV-002",
+        remark: "second",
+      }),
+    ]);
+    expect(payload.invoiceAuditLogs).toEqual([]);
+    expect(payload.tagDefinitions).toEqual([]);
+    expect(payload.tagGroups).toEqual([]);
+    expect(payload.tagGroupLinks).toEqual([]);
+    expect(payload.filterGroups).toEqual([]);
+    expect(payload.filterGroupRules).toEqual([]);
+    expect(payload.savedViews).toEqual([]);
+    expect(payload.settings).toEqual([]);
+  });
 });

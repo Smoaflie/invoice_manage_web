@@ -1,4 +1,5 @@
 import type { DashboardSidebarStatus } from "../../dashboard/ui/dashboardSidebarStatus";
+import type { InvoiceBundleNamingMode } from "../../documents/application/invoicePdfExport";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
 import { ReferenceInvoiceWorkspace } from "./ReferenceInvoiceWorkspace";
 import type { WorkspaceView } from "./referenceWorkspaceController.shared";
@@ -12,6 +13,8 @@ type InvoiceWorkspaceProps = {
   onOpenDetails: (invoiceDocumentId: string) => void;
   onEdit: (invoiceDocumentId: string) => void;
   onOpenPdf: (invoiceDocumentId: string) => void | Promise<void>;
+  onExportMergedPdf?: (invoiceDocumentIds: string[]) => void | Promise<void>;
+  onExportZip?: (invoiceDocumentIds: string[], bundleNamingMode: InvoiceBundleNamingMode) => void | Promise<void>;
   onDelete: (invoiceDocumentIds: string[]) => void | Promise<void>;
   onReparseSingle: (invoiceDocumentId: string) => void | Promise<void>;
   onBulkReparse: (invoiceDocumentIds: string[]) => void | Promise<void>;

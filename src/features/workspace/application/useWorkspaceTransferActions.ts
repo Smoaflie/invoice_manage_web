@@ -8,6 +8,7 @@ import { readFileAsText, triggerJsonDownload } from "../../transfer/application/
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
 
 type UseWorkspaceTransferActionsInput = {
+  getSelectedInvoiceDocumentIds: () => string[];
   onRefresh: () => void | Promise<void>;
   setWorkspaceMessage: (value: string) => void;
   setSelectedIdSet: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -69,7 +70,7 @@ export function useWorkspaceTransferActions(input: UseWorkspaceTransferActionsIn
 
   const handleExportData = useCallback(async () => {
     try {
-      triggerJsonDownload(await exportData());
+      triggerJsonDownload(await exportData({ invoiceDocumentIds: input.getSelectedInvoiceDocumentIds() }));
       input.setWorkspaceMessage("JSON 导出文件已生成，可直接下载。");
     } catch (error) {
       input.setWorkspaceMessage(error instanceof Error ? error.message : "导出数据失败。");

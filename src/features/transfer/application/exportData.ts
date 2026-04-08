@@ -22,6 +22,10 @@ export type ExportDataPayload = {
   exportedAt: string;
 };
 
+export type ExportDataOptions = {
+  invoiceDocumentIds?: string[];
+};
+
 function normalizeTransferInvoiceDocument(entry: InvoiceDocument): TransferInvoiceDocument {
   const {
     handleRef: _handleRef,
@@ -39,7 +43,7 @@ function normalizeTransferInvoiceDocument(entry: InvoiceDocument): TransferInvoi
   return rest;
 }
 
-export async function exportData(): Promise<ExportDataPayload> {
+export async function exportData(options: ExportDataOptions = {}): Promise<ExportDataPayload> {
   const [invoiceDocuments, invoiceAuditLogs, tagDefinitions, tagGroups, tagGroupLinks, filterGroups, filterGroupRules, savedViews, settings] = await Promise.all([
     appDb.invoiceDocuments.toArray(),
     appDb.invoiceAuditLogs.toArray(),
@@ -51,17 +55,20 @@ export async function exportData(): Promise<ExportDataPayload> {
     appDb.savedViews.toArray(),
     appDb.settings.toArray(),
   ]);
+  const selectedIdSet = options.invoiceDocumentIds ? new Set(options.invoiceDocumentIds) : null;
+  const selectedInvoiceDocuments = selectedIdSet ? invoiceDocuments.filter((entry) => selectedIdSet.has(entry.id)) : invoiceDocuments;
+  const exportMetadata = selectedIdSet === null;
 
   return {
-    invoiceDocuments: invoiceDocuments.map(normalizeTransferInvoiceDocument),
-    invoiceAuditLogs,
-    tagDefinitions,
-    tagGroups,
-    tagGroupLinks,
-    filterGroups,
-    filterGroupRules,
-    savedViews,
-    settings: settings.filter((setting) => !WEB_ONLY_OCR_SECRET_KEYS.has(setting.key)),
+    invoiceDocuments: selectedInvoiceDocuments.map(normalizeTransferInvoiceDocument),
+    invoiceAuditLogs: exportMetadata ? invoiceAuditLogs : [],
+    tagDefinitions: exportMetadata ? tagDefinitions : [],
+    tagGroups: exportMetadata ? tagGroups : [],
+    tagGroupLinks: exportMetadata ? tagGroupLinks : [],
+    filterGroups: exportMetadata ? filterGroups : [],
+    filterGroupRules: exportMetadata ? filterGroupRules : [],
+    savedViews: exportMetadata ? savedViews : [],
+    settings: exportMetadata ? settings.filter((setting) => !WEB_ONLY_OCR_SECRET_KEYS.has(setting.key)) : [],
     exportedAt: new Date().toISOString(),
   };
 }

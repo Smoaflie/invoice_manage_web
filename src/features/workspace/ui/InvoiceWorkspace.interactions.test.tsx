@@ -221,8 +221,10 @@ describe("InvoiceWorkspace interactions", () => {
 
     renderInvoiceWorkspace({ onRefresh });
 
-    await user.click(await screen.findByRole("button", { name: "导出数据" }));
-    await waitFor(() => expect(mockedDeps.exportDataMock).toHaveBeenCalledTimes(1));
+    await user.click(await screen.findByRole("checkbox", { name: "选择 INV-001" }));
+    await user.click(screen.getByRole("button", { name: "导出" }));
+    await user.click(screen.getByRole("menuitem", { name: "导出数据 JSON" }));
+    await waitFor(() => expect(mockedDeps.exportDataMock).toHaveBeenCalledWith({ invoiceDocumentIds: ["doc-1"] }));
 
     const input = document.querySelector('input[type="file"][accept*=".json"]') as HTMLInputElement | null;
     expect(input).toBeTruthy();
@@ -236,6 +238,30 @@ describe("InvoiceWorkspace interactions", () => {
     await waitFor(() => expect(mockedDeps.importDataMock).toHaveBeenCalledWith({ invoiceDocuments: [{ id: "doc-2" }] }));
     await waitFor(() => expect(onRefresh).toHaveBeenCalled());
     expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:workspace-export");
+  });
+
+  test("routes merged pdf and zip export actions from the toolbar menu", async () => {
+    const user = userEvent.setup();
+    const onExportMergedPdf = vi.fn();
+    const onExportZip = vi.fn();
+
+    renderInvoiceWorkspace({
+      onExportMergedPdf,
+      onExportZip,
+    });
+
+    await user.click(await screen.findByRole("checkbox", { name: "选择 INV-001" }));
+
+    await user.click(screen.getByRole("button", { name: "导出" }));
+    await user.click(screen.getByRole("menuitem", { name: "导出合并 PDF" }));
+
+    expect(onExportMergedPdf).toHaveBeenCalledWith(["doc-1"]);
+
+    await user.click(screen.getByRole("button", { name: "导出" }));
+    await user.click(screen.getByRole("menuitem", { name: "导出压缩包 ZIP(包含所有PDF文件及压缩包)" }));
+    await user.click(screen.getByRole("menuitem", { name: "按价税合计命名 PDF" }));
+
+    expect(onExportZip).toHaveBeenCalledWith(["doc-1"], "total_amount");
   });
 
   test("confirms conflicting toolbar imports before continuing with flagged records", async () => {

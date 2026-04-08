@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type RefObject } from "r
 import type { SavedView } from "../../../shared/types/savedView";
 import { SavedViewControls } from "../../views/ui/SavedViewControls";
 import { WorkspaceCommandDeck } from "./WorkspaceCommandDeck";
+import { WorkspaceExportMenu } from "./WorkspaceExportMenu";
 import { WorkspaceTagMenu } from "./WorkspaceTagMenu";
 import type { WorkspacePresentation } from "./workspacePresentation";
 import { WorkspaceViewTabs } from "./WorkspaceViewTabs";
@@ -47,6 +48,8 @@ type ReferenceWorkspaceToolbarProps = {
   viewFieldLabel?: string;
   onImportDataFile: (file: File) => void | Promise<void>;
   onExportData: () => void | Promise<void>;
+  onExportMergedPdf?: () => void | Promise<void>;
+  onExportZip?: (bundleNamingMode: "invoice_number" | "total_amount") => void | Promise<void>;
   onExportExcel?: () => void | Promise<void>;
   showExportExcelButton?: boolean;
   onDeleteSelected: () => void;
@@ -173,9 +176,7 @@ export function ReferenceWorkspaceToolbar(props: ReferenceWorkspaceToolbarProps)
             <button type="button" className="workspace-toolbar-shell__ghost" onClick={() => importInputRef.current?.click()}>
               导入数据
             </button>
-            <button type="button" className="workspace-toolbar-shell__ghost" onClick={props.onExportData}>
-              导出数据
-            </button>
+            <WorkspaceExportMenu disabled={props.selectedCount === 0} onExportData={props.onExportData} onExportMergedPdf={props.onExportMergedPdf} onExportZip={props.onExportZip} />
             {props.showExportExcelButton ? (
               <button type="button" className="workspace-toolbar-shell__ghost" disabled={props.selectedCount === 0} onClick={props.onExportExcel}>
                 导出 Excel

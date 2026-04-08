@@ -50,7 +50,13 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
   const fieldsById = useMemo(() => new Map(fields.map((field) => [field.id, field])), [fields]);
   const documentIds = useMemo(() => props.invoiceDocuments.map((document) => document.id), [props.invoiceDocuments]);
   const { selectedIdSet, setSelectedIdSet } = usePersistedWorkspaceSelection(documentIds);
-  const transferActions = useWorkspaceTransferActions({ onRefresh: props.onRefresh, setWorkspaceMessage, setSelectedIdSet, setImportingFiles });
+  const transferActions = useWorkspaceTransferActions({
+    getSelectedInvoiceDocumentIds: () => [...selectedIdSet],
+    onRefresh: props.onRefresh,
+    setWorkspaceMessage,
+    setSelectedIdSet,
+    setImportingFiles,
+  });
   const { dashboardDocument, filterGroups, refreshFilterGroups, resolveFilterGroup, saveDashboardDocument } = useWorkspaceAuxiliaryDocuments();
   const { currentView, hasViewDraft, handleSaveViewDraft, handleDiscardViewDraft } = useWorkspaceViewDrafts({
     fields,
@@ -255,6 +261,8 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
     handleToggleAll,
     handleDeleteSelected: () => void props.onDelete([...selectedIdSet]),
     handleReparseSelected: () => void props.onBulkReparse([...selectedIdSet]),
+    handleExportMergedPdf: () => void props.onExportMergedPdf?.([...selectedIdSet]),
+    handleExportZip: (bundleNamingMode: "invoice_number" | "total_amount") => void props.onExportZip?.([...selectedIdSet], bundleNamingMode),
     handleDeleteSingle: (invoiceDocumentId: string) => void props.onDelete([invoiceDocumentId]),
     handleReparseSingle: (invoiceDocumentId: string) => void props.onReparseSingle(invoiceDocumentId),
     handleOpenPdfSingle: (invoiceDocumentId: string) => void props.onOpenPdf(invoiceDocumentId),

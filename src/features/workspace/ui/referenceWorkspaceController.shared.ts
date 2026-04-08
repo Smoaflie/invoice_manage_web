@@ -1,4 +1,5 @@
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
+import type { InvoiceBundleNamingMode } from "../../documents/application/invoicePdfExport";
 import type { DashboardView } from "../../dashboard/ui/Dashboard";
 import type { DashboardSidebarStatus } from "../../dashboard/ui/dashboardSidebarStatus";
 
@@ -13,6 +14,8 @@ export type ReferenceInvoiceWorkspaceProps = {
   onOpenDetails: (invoiceDocumentId: string) => void;
   onEdit: (invoiceDocumentId: string) => void;
   onOpenPdf: (invoiceDocumentId: string) => void | Promise<void>;
+  onExportMergedPdf?: (invoiceDocumentIds: string[]) => void | Promise<void>;
+  onExportZip?: (invoiceDocumentIds: string[], bundleNamingMode: InvoiceBundleNamingMode) => void | Promise<void>;
   onDelete: (invoiceDocumentIds: string[]) => void | Promise<void>;
   onReparseSingle: (invoiceDocumentId: string) => void | Promise<void>;
   onBulkReparse: (invoiceDocumentIds: string[]) => void | Promise<void>;
