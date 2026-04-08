@@ -1,7 +1,7 @@
 .workspace-card--dashboard-widget {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  overflow: visible;
+  overflow: hidden;
 }
 
 .dashboard-widget__body,
