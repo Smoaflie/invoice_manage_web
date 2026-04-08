@@ -97,7 +97,7 @@
 }
 
 .activity-list span,
-.bridge-status {
+.ocr-api-status {
   color: var(--text-muted);
 }
 

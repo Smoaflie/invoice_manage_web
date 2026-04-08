@@ -7,7 +7,7 @@ import type { SettingRecord } from "../../../shared/types/settings";
 import type { TagDefinition, TagGroup, TagGroupLink } from "../../../shared/types/tagDefinition";
 
 export type TransferInvoiceDocument = Omit<InvoiceDocument, "handleRef" | "bindingStatus" | "bindingErrorType">;
-const WEB_ONLY_OCR_SECRET_KEYS = new Set(["ocr.appId", "ocr.apiKey", "ocr.secretKey"]);
+const WEB_ONLY_OCR_SECRET_KEYS = new Set(["ocr.baiduApiKey", "ocr.baiduSecretKey", "ocr.tencentSecretId", "ocr.tencentSecretKey"]);
 
 export type ExportDataPayload = {
   invoiceDocuments: TransferInvoiceDocument[];

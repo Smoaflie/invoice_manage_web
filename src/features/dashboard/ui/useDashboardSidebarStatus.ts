@@ -5,7 +5,6 @@ type UseDashboardSidebarStatusInput = {
   activeView: "records" | "dashboard" | "collaboration" | "settings";
   dashboardMessage: string;
   invoiceDocumentCount: number;
-  bridgeConnected: boolean | null;
   onSidebarStatusChange?: (status: DashboardSidebarStatus) => void;
 };
 
@@ -24,13 +23,13 @@ export function useDashboardSidebarStatus(input: UseDashboardSidebarStatusInput)
         createDashboardSidebarStatus(
           input.dashboardMessage,
           input.activeView === "settings"
-            ? [`${input.invoiceDocumentCount} 条记录`, input.bridgeConnected === true ? "桥接已连接" : input.bridgeConnected === false ? "桥接未连接" : "桥接状态检测中"]
+            ? [`${input.invoiceDocumentCount} 条记录`, "OCR API 同源代理"]
             : input.activeView === "collaboration"
               ? ["本地协作会话"]
               : [`${input.invoiceDocumentCount} 条记录`],
         ),
     );
-  }, [input.activeView, input.bridgeConnected, input.dashboardMessage, input.invoiceDocumentCount, input.onSidebarStatusChange, workspaceSidebarStatus]);
+  }, [input.activeView, input.dashboardMessage, input.invoiceDocumentCount, input.onSidebarStatusChange, workspaceSidebarStatus]);
 
   return setWorkspaceSidebarStatus;
 }

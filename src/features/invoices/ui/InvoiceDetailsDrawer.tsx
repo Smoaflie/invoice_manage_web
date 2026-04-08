@@ -24,6 +24,24 @@ const DETAIL_ROWS: Array<{ label: string; field: keyof InvoiceDocument }> = [
   { label: "归属人", field: "owner" },
 ];
 
+const AUDIT_FIELD_LABELS: Record<string, string> = {
+  invoiceNumber: "发票号码",
+  invoiceCode: "发票代码",
+  invoiceDate: "开票日期",
+  buyerName: "购买方",
+  sellerName: "销售方",
+  amountWithoutTax: "未税金额",
+  taxAmount: "税额",
+  totalAmount: "总金额",
+  tags: "标签",
+  remark: "备注",
+  annotation: "批注",
+  uploader: "上传者",
+  owner: "归属人",
+  items: "商品明细",
+  ocr识别: "OCR 重新识别",
+};
+
 function renderValue(value: unknown) {
   if (typeof value === "number") {
     return value.toFixed(2);
@@ -34,6 +52,50 @@ function renderValue(value: unknown) {
   }
 
   return typeof value === "string" && value.length > 0 ? value : "—";
+}
+
+function formatAuditTitle(log: InvoiceAuditLog) {
+  const fieldLabel = AUDIT_FIELD_LABELS[log.targetField] ?? log.targetField;
+
+  switch (log.changeType) {
+    case "ocr_parse":
+      return log.targetField === "ocr识别" ? fieldLabel : `OCR 更新${fieldLabel}`;
+    case "manual_tag_update":
+      return "修改标签";
+    case "manual_annotation_update":
+      return "修改批注";
+    case "manual_create":
+      return fieldLabel;
+    case "manual_edit":
+    default:
+      return `修改${fieldLabel}`;
+  }
+}
+
+function formatOcrVendorLabel(rawValue: string) {
+  const vendor = rawValue.trim().split(/\s+/)[0]?.toLowerCase();
+
+  switch (vendor) {
+    case "baidu":
+      return "百度";
+    case "tencent":
+      return "腾讯";
+    default:
+      return rawValue.trim();
+  }
+}
+
+function formatAuditValue(log: InvoiceAuditLog, value: string) {
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    return "空";
+  }
+
+  if (log.changeType === "ocr_parse" && log.targetField === "ocr识别") {
+    return formatOcrVendorLabel(normalized);
+  }
+
+  return normalized;
 }
 
 export function InvoiceDetailsDrawer({
@@ -105,14 +167,14 @@ export function InvoiceDetailsDrawer({
           <h3>修改历史</h3>
           <ul className="audit-list">
             {auditLogs.length === 0 ? (
-              <li>暂无人工修改记录。</li>
+              <li>暂无修改记录。</li>
             ) : (
               auditLogs.map((log) => (
                 <li key={log.id}>
-                  <strong>{log.targetField}</strong>
+                  <strong>{formatAuditTitle(log)}</strong>
                   <span>{log.changedAt}</span>
                   <p>
-                    {log.beforeValue || "空"} → {log.afterValue || "空"}
+                    {formatAuditValue(log, log.beforeValue)} {"->"} {formatAuditValue(log, log.afterValue)}
                   </p>
                 </li>
               ))

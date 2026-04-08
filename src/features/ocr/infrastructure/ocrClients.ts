@@ -1,19 +1,12 @@
 import type { OcrInvoiceResponse } from "./normalizeInvoice";
-import { extensionBridgeParse } from "../bridge/extensionBridge";
+import { getOcrProvider, isOcrProviderId } from "../providers/registry";
+import type { OcrProviderCredentials, OcrProviderId } from "../providers/types";
 
-export const OCR_VENDORS = ["baidu", "tencent"] as const;
-
-export type OcrVendor = (typeof OCR_VENDORS)[number];
-
-export interface OcrClientCredentials {
-  appId: string;
-  apiKey: string;
-  secretKey: string;
-}
+export type OcrVendor = OcrProviderId;
 
 export interface OcrClientConfig {
   vendor: OcrVendor;
-  credentials?: OcrClientCredentials;
+  credentials?: OcrProviderCredentials;
 }
 
 export interface OcrRequestOptions {
@@ -59,12 +52,12 @@ function getFileKind(file: File) {
 }
 
 function assertSupportedVendor(vendor: string): asserts vendor is OcrVendor {
-  if (!OCR_VENDORS.includes(vendor as OcrVendor)) {
+  if (!isOcrProviderId(vendor)) {
     throw new Error(`Unsupported OCR vendor: ${vendor}`);
   }
 }
 
-async function requestExtensionInvoiceOcr(
+async function requestApiInvoiceOcr(
   file: File,
   config: OcrClientConfig,
   options: OcrRequestOptions = {},
@@ -74,17 +67,15 @@ async function requestExtensionInvoiceOcr(
   }
 
   assertSupportedVendor(config.vendor);
-  const encodedFile = await readBase64(file);
-
-  return extensionBridgeParse(
-    {
-      vendor: config.vendor,
-      fileName: file.name,
-      mimeType: file.type,
-      fileBase64: encodedFile,
-      fileKind: getFileKind(file),
-    },
-  );
+  const provider = getOcrProvider(config.vendor);
+  return provider.recognizeInvoice({
+    fileName: file.name,
+    mimeType: file.type,
+    fileBase64: await readBase64(file),
+    fileKind: getFileKind(file),
+    credentials: config.credentials ?? {},
+    signal: options.signal,
+  });
 }
 
 export async function requestInvoiceOcr(
@@ -92,5 +83,5 @@ export async function requestInvoiceOcr(
   config: OcrClientConfig,
   options: OcrRequestOptions = {},
 ): Promise<OcrInvoiceResponse> {
-  return requestExtensionInvoiceOcr(file, config, options);
+  return requestApiInvoiceOcr(file, config, options);
 }

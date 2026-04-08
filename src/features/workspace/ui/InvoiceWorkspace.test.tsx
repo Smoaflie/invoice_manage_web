@@ -156,6 +156,22 @@ describe("InvoiceWorkspace", () => {
     expect(onDelete).toHaveBeenCalledWith(["doc-1", "doc-2"]);
   });
 
+  test("runs row-level OCR from the single-record action instead of the batch action", async () => {
+    const user = userEvent.setup();
+    const onBulkReparse = vi.fn();
+    const onReparseSingle = vi.fn();
+
+    renderInvoiceWorkspace({
+      onBulkReparse,
+      onReparseSingle,
+    });
+
+    await user.click(await screen.findByRole("button", { name: "OCR识别" }));
+
+    expect(onReparseSingle).toHaveBeenCalledWith("doc-1");
+    expect(onBulkReparse).not.toHaveBeenCalled();
+  });
+
   test("exports only the currently selected invoices to excel", async () => {
     const user = userEvent.setup();
 

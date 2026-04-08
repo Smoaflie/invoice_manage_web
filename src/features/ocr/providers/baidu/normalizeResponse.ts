@@ -1,5 +1,5 @@
-import type { InvoiceItem } from "../../../shared/types/invoiceRecord";
-import type { OcrInvoiceResponse } from "./normalizeInvoice";
+import type { InvoiceItem } from "../../../../shared/types/invoiceRecord";
+import type { OcrInvoiceResponse } from "../../infrastructure/normalizeInvoice";
 
 type BaiduWord = {
   row?: string;
@@ -7,6 +7,24 @@ type BaiduWord = {
 };
 
 type BaiduWordsResult = Record<string, string | BaiduWord[] | undefined>;
+
+function toPages(body: unknown): BaiduWordsResult[] | null {
+  if (Array.isArray(body)) {
+    return body as BaiduWordsResult[];
+  }
+
+  if (
+    typeof body === "object" &&
+    body !== null &&
+    "words_result" in body &&
+    typeof body.words_result === "object" &&
+    body.words_result !== null
+  ) {
+    return [body.words_result as BaiduWordsResult];
+  }
+
+  return null;
+}
 
 function readWord(value: string | BaiduWord[] | undefined): string {
   if (typeof value === "string") {
@@ -98,7 +116,12 @@ function readCommodityItems(pages: BaiduWordsResult[]): InvoiceItem[] {
   }));
 }
 
-export function normalizeBaiduVatInvoiceResponse(pages: BaiduWordsResult[]): OcrInvoiceResponse {
+export function normalizeBaiduResponse(body: unknown): OcrInvoiceResponse {
+  const pages = toPages(body);
+
+  if (!pages) {
+    return (body ?? {}) as OcrInvoiceResponse;
+  }
   const lastPage = pages.at(-1);
 
   if (!lastPage) {

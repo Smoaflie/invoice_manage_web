@@ -1,34 +1,38 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { appDb } from "../../../shared/db/appDb";
-import { hasOcrExtensionBridge, openOcrExtensionOptions } from "../../ocr/bridge/extensionBridge";
-import { OCR_VENDORS } from "../../ocr/infrastructure/ocrClients";
-import { OcrBridgeStatus } from "./OcrBridgeStatus";
+import type { SettingsKey } from "../../../shared/types/settings";
+import { getAllOcrProviderSettingKeys, getOcrProvider, getOcrProviderOptions, isOcrProviderId } from "../../ocr/providers/registry";
+import type { OcrProviderCredentials, OcrProviderId } from "../../ocr/providers/types";
 
 type OcrSettingsFormState = {
-  vendor: string;
-  enabled: boolean;
+  vendor: OcrProviderId;
+  values: Partial<Record<SettingsKey, string>>;
 };
 
 const EMPTY_STATE: OcrSettingsFormState = {
-  vendor: "",
-  enabled: false,
+  vendor: "tencent",
+  values: {},
 };
 
 async function loadOcrSettings(): Promise<OcrSettingsFormState> {
-  const [vendorSetting, enabledSetting] = await Promise.all([
-    appDb.settings.get("ocr.vendor"),
-    appDb.settings.get("ocr.enabled"),
-  ]);
+  const settings = await appDb.settings.toArray();
+  const vendorSetting = settings.find((entry) => entry.key === "ocr.vendor");
+  const values = Object.fromEntries(
+    settings
+      .filter((entry): entry is typeof entry & { value: string | null } => typeof entry.value === "string" || entry.value === null)
+      .map((entry) => [entry.key, entry.value ?? ""]),
+  ) as Partial<Record<SettingsKey, string>>;
 
   return {
     ...EMPTY_STATE,
-    vendor: typeof vendorSetting?.value === "string" ? vendorSetting.value : "",
-    enabled: typeof enabledSetting?.value === "boolean" ? enabledSetting.value : false,
+    vendor: typeof vendorSetting?.value === "string" && isOcrProviderId(vendorSetting.value) ? vendorSetting.value : "tencent",
+    values,
   };
 }
 
 async function saveOcrSettings(state: OcrSettingsFormState, now: () => string) {
   const updatedAt = now();
+  const providerSettingKeys = getAllOcrProviderSettingKeys();
 
   await appDb.transaction("rw", appDb.settings, async () => {
     await Promise.all([
@@ -39,36 +43,26 @@ async function saveOcrSettings(state: OcrSettingsFormState, now: () => string) {
       }),
       appDb.settings.put({
         key: "ocr.enabled",
-        value: state.enabled,
+        value: true,
         updatedAt,
       }),
-      appDb.settings.put({ key: "ocr.appId", value: null, updatedAt }),
-      appDb.settings.put({ key: "ocr.apiKey", value: null, updatedAt }),
-      appDb.settings.put({ key: "ocr.secretKey", value: null, updatedAt }),
+      ...providerSettingKeys.map((key) =>
+        appDb.settings.put({ key, value: state.values[key] || null, updatedAt }),
+      ),
     ]);
   });
 }
 
 export function OcrSettingsForm() {
   const [form, setForm] = useState(EMPTY_STATE);
-  const [status, setStatus] = useState("正在加载 OCR 设置...");
-  const [bridgeConnected, setBridgeConnected] = useState<boolean | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [bridgeBusy, setBridgeBusy] = useState(false);
+  const [loadStatus, setLoadStatus] = useState("");
+  const [saveStatus, setSaveStatus] = useState("");
+  const [testStatus, setTestStatus] = useState("");
+  const [busyAction, setBusyAction] = useState<"save" | "test" | null>(null);
 
-  const refreshBridgeStatus = async () => {
-    setBridgeBusy(true);
-
-    try {
-      const connected = await hasOcrExtensionBridge();
-      setBridgeConnected(connected);
-      setStatus(connected ? "OCR 扩展已连接。" : "未检测到 OCR 扩展连接。");
-    } catch {
-      setBridgeConnected(false);
-      setStatus("未检测到 OCR 扩展连接。");
-    } finally {
-      setBridgeBusy(false);
-    }
+  const resetTransientStatus = () => {
+    setSaveStatus((current) => (current === "OCR 设置已保存。" ? "" : current));
+    setTestStatus("");
   };
 
   useEffect(() => {
@@ -80,32 +74,14 @@ export function OcrSettingsForm() {
           return;
         }
 
-        setForm(settings);
-        setStatus("OCR 设置已加载。");
+        setForm({
+          ...settings,
+          vendor: settings.vendor,
+        });
       })
       .catch(() => {
         if (active) {
-          setStatus("OCR 设置加载失败。");
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-
-    void hasOcrExtensionBridge()
-      .then((connected) => {
-        if (active) {
-          setBridgeConnected(connected);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setBridgeConnected(false);
+          setLoadStatus("OCR 设置加载失败。");
         }
       });
 
@@ -115,81 +91,100 @@ export function OcrSettingsForm() {
   }, []);
 
   const updateField = <K extends keyof OcrSettingsFormState>(key: K, value: OcrSettingsFormState[K]) => {
+    resetTransientStatus();
     setForm((current) => ({
       ...current,
       [key]: value,
     }));
   };
 
+  const updateSettingValue = (key: SettingsKey, value: string) => {
+    resetTransientStatus();
+    setForm((current) => ({
+      ...current,
+      values: {
+        ...current.values,
+        [key]: value,
+      },
+    }));
+  };
+
+  const activeProvider = getOcrProvider(form.vendor);
+  const busy = busyAction !== null;
+
+  const getActiveCredentials = (): OcrProviderCredentials =>
+    Object.fromEntries(
+      activeProvider.getSettingsFields().map((field) => [field.id, form.values[field.settingKey] ?? ""]),
+    ) as OcrProviderCredentials;
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setBusy(true);
-    setStatus("正在保存 OCR 设置...");
+    setBusyAction("save");
+    setSaveStatus("正在保存 OCR 设置...");
+    setTestStatus("");
 
     try {
       await saveOcrSettings(form, () => new Date().toISOString());
-      setStatus("OCR 设置已保存。");
+      setSaveStatus("OCR 设置已保存。");
     } catch {
-      setStatus("OCR 设置保存失败。");
+      setSaveStatus("OCR 设置保存失败。");
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
-  const handleOpenExtensionOptions = async () => {
-    setBridgeBusy(true);
-    setStatus("正在打开扩展设置页...");
+  const handleTest = async () => {
+    setBusyAction("test");
+    setSaveStatus((current) => (current === "OCR 设置已保存。" ? "" : current));
+    setTestStatus("正在测试 OCR 设置...");
 
     try {
-      await openOcrExtensionOptions();
-      setStatus("扩展设置页已打开。请在扩展页面填写并测试密钥。");
+      const result = await activeProvider.testCredentials(getActiveCredentials());
+      setTestStatus(result.message);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "无法打开扩展设置页。");
+      setTestStatus(error instanceof Error ? error.message : "OCR 设置测试失败。");
     } finally {
-      setBridgeBusy(false);
+      setBusyAction(null);
     }
   };
 
   return (
     <form className="settings-form" onSubmit={handleSubmit}>
-      <OcrBridgeStatus connected={bridgeConnected} />
-      <p className="settings-form__copy">OCR 密钥由浏览器扩展统一管理。请先打开扩展设置页填写并测试密钥。</p>
-      <div className="settings-form__actions">
-        <button type="button" onClick={() => void handleOpenExtensionOptions()} disabled={busy || bridgeBusy}>
-          打开扩展设置
-        </button>
-        <button type="button" className="button-secondary" onClick={() => void refreshBridgeStatus()} disabled={busy || bridgeBusy}>
-          {bridgeBusy ? "检查中..." : "重新检查连接"}
-        </button>
-      </div>
-
-      <fieldset className="settings-form__fields" disabled={busy}>
+      <fieldset className="settings-form__row" disabled={busy}>
         <label>
-          <span>OCR 供应商</span>
-          <select value={form.vendor} onChange={(event) => updateField("vendor", event.target.value)}>
-            <option value="">请选择供应商</option>
-            {OCR_VENDORS.map((vendor) => (
-              <option key={vendor} value={vendor}>
-                {vendor}
+          <span>OCR服务商</span>
+          <select value={form.vendor} onChange={(event) => updateField("vendor", event.target.value as OcrProviderId)}>
+            {getOcrProviderOptions().map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
         </label>
-
-        <label>
-          <input
-            type="checkbox"
-            checked={form.enabled}
-            onChange={(event) => updateField("enabled", event.target.checked)}
-          />
-          启用 OCR
-        </label>
+      </fieldset>
+      <fieldset className="settings-form__fields" disabled={busy}>
+        {activeProvider.getSettingsFields().map((field) => (
+          <label key={field.settingKey}>
+            <span>{field.label}</span>
+            <input value={form.values[field.settingKey] ?? ""} onChange={(event) => updateSettingValue(field.settingKey, event.target.value)} />
+          </label>
+        ))}
       </fieldset>
 
-      <button type="submit" disabled={busy}>
-        {busy ? "保存中..." : "保存 OCR 设置"}
-      </button>
-      <p className="settings-form__status">{status}</p>
+      <div className="settings-form__actions">
+        <button type="submit" disabled={busy}>
+          {busyAction === "save" ? "保存中..." : "保存 OCR 设置"}
+        </button>
+        <button type="button" className="button-secondary" onClick={handleTest} disabled={busy}>
+          {busyAction === "test" ? "测试中..." : "测试"}
+        </button>
+      </div>
+      {form.vendor === "tencent" ? (
+        <p className="settings-form__copy">测试腾讯 OCR 会模拟一次真实识别调用，这将会消耗供应商侧额度。</p>
+      ) : null}
+      {loadStatus ? <p className="settings-form__status">{loadStatus}</p> : null}
+      {saveStatus ? <p className="settings-form__status">{saveStatus}</p> : null}
+      {testStatus ? <p className="settings-form__status">{testStatus}</p> : null}
     </form>
   );
 }

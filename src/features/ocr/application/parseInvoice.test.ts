@@ -6,6 +6,7 @@ import { parseInvoice } from "./parseInvoice";
 describe("parseInvoice", () => {
   afterEach(async () => {
     await appDb.invoiceDocuments.clear();
+    await appDb.invoiceAuditLogs.clear();
     await appDb.settings.clear();
   });
 
@@ -258,5 +259,75 @@ describe("parseInvoice", () => {
       conflictStatus: "none",
       conflictMessage: "",
     });
+  });
+
+  it("resets edited state and appends OCR audit logs when reparsing", async () => {
+    await appDb.invoiceDocuments.add({
+      id: "doc-1",
+      contentHash: "hash-1",
+      fileName: "demo.pdf",
+      fileSize: 123,
+      lastModified: 1,
+      handleRef: "handle-1",
+      bindingStatus: "readable",
+      bindingErrorType: null,
+      ocrVendor: "baidu",
+      ocrParsedAt: "2026-03-29T00:00:00.000Z",
+      parseStatus: "parsed",
+      conflictStatus: "none",
+      conflictMessage: "",
+      invoiceNumber: "INV-001",
+      invoiceCode: "CODE-001",
+      invoiceDate: "2026-03-30",
+      totalAmount: 100,
+      taxAmount: 6,
+      amountWithoutTax: 94,
+      buyerName: "旧买方",
+      sellerName: "旧卖方",
+      items: [],
+      tags: [],
+      annotation: "",
+      uploader: "",
+      owner: "",
+      sourceType: "ocr",
+      edited: true,
+      createdAt: "2026-03-30T00:00:00.000Z",
+      updatedAt: "2026-03-30T00:00:00.000Z",
+    });
+
+    await parseInvoice("doc-1", {
+      loadFile: vi.fn().mockResolvedValue(new File(["pdf"], "demo.pdf", { type: "application/pdf" })),
+      requestOcr: vi.fn().mockResolvedValue({
+        invoiceNumber: "INV-001",
+        invoiceCode: "CODE-001",
+        invoiceDate: "2026-03-30",
+        totalAmount: 100,
+        taxAmount: 6,
+        amountWithoutTax: 94,
+        buyerName: "旧买方",
+        sellerName: "旧卖方",
+        items: [],
+      }),
+      vendor: "tencent",
+      now: () => "2026-03-31T00:00:00.000Z",
+    });
+
+    expect(await appDb.invoiceDocuments.get("doc-1")).toMatchObject({
+      edited: false,
+      ocrVendor: "tencent",
+      ocrParsedAt: "2026-03-31T00:00:00.000Z",
+    });
+
+    expect(await appDb.invoiceAuditLogs.toArray()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          invoiceDocumentId: "doc-1",
+          changeType: "ocr_parse",
+          targetField: "ocr识别",
+          beforeValue: "baidu 2026-03-29T00:00:00.000Z",
+          afterValue: "tencent 2026-03-31T00:00:00.000Z",
+        }),
+      ]),
+    );
   });
 });

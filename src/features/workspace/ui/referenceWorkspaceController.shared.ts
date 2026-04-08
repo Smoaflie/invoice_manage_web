@@ -14,6 +14,7 @@ export type ReferenceInvoiceWorkspaceProps = {
   onEdit: (invoiceDocumentId: string) => void;
   onOpenPdf: (invoiceDocumentId: string) => void | Promise<void>;
   onDelete: (invoiceDocumentIds: string[]) => void | Promise<void>;
+  onReparseSingle: (invoiceDocumentId: string) => void | Promise<void>;
   onBulkReparse: (invoiceDocumentIds: string[]) => void | Promise<void>;
   onRefresh: () => void | Promise<void>;
 };

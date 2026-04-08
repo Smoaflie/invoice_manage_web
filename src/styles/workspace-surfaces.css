@@ -181,11 +181,11 @@
   background: rgba(17, 27, 41, 0.06);
 }
 
-.bridge-status--online {
+.ocr-api-status--online {
   color: var(--success);
 }
 
-.bridge-status--offline {
+.ocr-api-status--offline {
   color: var(--warning);
 }
 

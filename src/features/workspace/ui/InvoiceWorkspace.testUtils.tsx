@@ -164,6 +164,7 @@ export function renderInvoiceWorkspace(overrides: RenderInvoiceWorkspaceInput = 
       onEdit={() => {}}
       onOpenPdf={() => {}}
       onDelete={() => {}}
+      onReparseSingle={() => {}}
       onBulkReparse={() => {}}
       onRefresh={() => {}}
       {...overrides}

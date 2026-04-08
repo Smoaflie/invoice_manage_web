@@ -252,7 +252,7 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
     handleDeleteSelected: () => void props.onDelete([...selectedIdSet]),
     handleReparseSelected: () => void props.onBulkReparse([...selectedIdSet]),
     handleDeleteSingle: (invoiceDocumentId: string) => void props.onDelete([invoiceDocumentId]),
-    handleReparseSingle: (invoiceDocumentId: string) => void props.onBulkReparse([invoiceDocumentId]),
+    handleReparseSingle: (invoiceDocumentId: string) => void props.onReparseSingle(invoiceDocumentId),
     handleOpenPdfSingle: (invoiceDocumentId: string) => void props.onOpenPdf(invoiceDocumentId),
     handleToggleGroup: (groupId: string) => setExpandedGroupIds((current) => (current.includes(groupId) ? current.filter((id) => id !== groupId) : [...current, groupId])),
     handleBulkAddTags: () => void handleBulkTagUpdate("add"),

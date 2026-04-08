@@ -19,7 +19,7 @@ const VIEW_META: Record<DashboardView, { title: string; subtitle: string }> = {
   },
   settings: {
     title: "配置中心",
-    subtitle: "管理 OCR 桥接状态、识别偏好与当前浏览器的本地优先运行配置。",
+    subtitle: "管理 OCR 识别偏好与当前浏览器的本地优先运行配置。",
   },
 };
 

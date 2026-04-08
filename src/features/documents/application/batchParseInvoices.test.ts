@@ -55,4 +55,67 @@ describe("batchParseInvoices", () => {
     expect(result.skippedIds).toEqual(["doc-2"]);
     expect(result.failedIds).toEqual([]);
   });
+
+  test("counts parse rejections as failures", async () => {
+    const parseOne = vi
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("ocr failed"));
+
+    const result = await batchParseInvoices(
+      [
+        makeRow({ id: "doc-1", bindingStatus: "readable", handleRef: "handle-1" }),
+        makeRow({ id: "doc-2", bindingStatus: "readable", handleRef: "handle-2" }),
+      ],
+      parseOne,
+    );
+
+    expect(result.parsedIds).toEqual(["doc-1"]);
+    expect(result.failedIds).toEqual(["doc-2"]);
+    expect(result.skippedIds).toEqual([]);
+  });
+
+  test("reports running progress with total, success, failure and skip counts", async () => {
+    const parseOne = vi
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("ocr failed"));
+    const onProgress = vi.fn();
+
+    await batchParseInvoices(
+      [
+        makeRow({ id: "doc-1", bindingStatus: "readable", handleRef: "handle-1" }),
+        makeRow({ id: "doc-2", bindingStatus: "readable", handleRef: "handle-2" }),
+        makeRow({ id: "doc-3", bindingStatus: "unreadable", handleRef: "" }),
+      ],
+      parseOne,
+      onProgress,
+    );
+
+    expect(onProgress).toHaveBeenCalledTimes(3);
+    expect(onProgress).toHaveBeenNthCalledWith(1, {
+      totalCount: 3,
+      completedCount: 1,
+      parsedCount: 1,
+      failedCount: 0,
+      skippedCount: 0,
+      currentInvoiceDocumentId: "doc-1",
+    });
+    expect(onProgress).toHaveBeenNthCalledWith(2, {
+      totalCount: 3,
+      completedCount: 2,
+      parsedCount: 1,
+      failedCount: 1,
+      skippedCount: 0,
+      currentInvoiceDocumentId: "doc-2",
+    });
+    expect(onProgress).toHaveBeenNthCalledWith(3, {
+      totalCount: 3,
+      completedCount: 3,
+      parsedCount: 1,
+      failedCount: 1,
+      skippedCount: 1,
+      currentInvoiceDocumentId: "doc-3",
+    });
+  });
 });

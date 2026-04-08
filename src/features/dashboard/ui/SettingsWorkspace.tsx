@@ -1,30 +1,27 @@
 import type { ReactNode } from "react";
+import { isDemoBuild } from "../../../app/runtimeConfig";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
 import { RegexFilterGroupPanel } from "../../filters/ui/RegexFilterGroupPanel";
 import { TagManagerPanel } from "../../tags/ui/TagManagerPanel";
-import { SettingsStatusBoard } from "./SettingsStatusBoard";
 
 type SettingsWorkspaceProps = {
-  message: string;
   settingsForm: ReactNode;
-  bridgeConnected: boolean | null;
   invoiceDocuments: InvoiceDocument[];
 };
 
-export function SettingsWorkspace({ message, settingsForm, bridgeConnected, invoiceDocuments }: SettingsWorkspaceProps) {
+export function SettingsWorkspace({ settingsForm, invoiceDocuments }: SettingsWorkspaceProps) {
   return (
     <section className="workspace-page workspace-page--settings">
-      <SettingsStatusBoard message={message} bridgeConnected={bridgeConnected} />
-
       <div className="workspace-grid workspace-grid--settings">
-        <section className="workspace-card workspace-card--settings-form">
+        <section className="workspace-card workspace-card--settings-form workspace-card--settings-form-primary">
           <div className="workspace-card__header">
             <div>
               <p className="workspace-card__eyebrow">识别偏好</p>
-              <h2>默认识别配置</h2>
-              <p className="workspace-card__copy">设置供应商和当前浏览器内是否启用 OCR。</p>
+              <h2>OCR配置</h2>
             </div>
           </div>
+          {isDemoBuild ? <p className="workspace-card__copy">示例网站提示</p> : null}
+          {isDemoBuild ? <p className="workspace-card__copy">我们不会存储你的 API Key。后端只负责把请求转发到目标 OCR 服务以处理 CORS。</p> : null}
           {settingsForm}
         </section>
       </div>

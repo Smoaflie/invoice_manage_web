@@ -86,7 +86,7 @@
 }
 
 .workspace-grid--settings {
-  grid-template-columns: minmax(320px, 0.92fr) minmax(420px, 1.08fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
 }
 
@@ -95,7 +95,7 @@
   gap: 18px;
 }
 
-.workspace-card--settings-info .bridge-status {
+.workspace-card--settings-info .ocr-api-status {
   display: inline-flex;
   align-items: center;
   min-height: 40px;
@@ -105,17 +105,35 @@
 }
 
 .workspace-card--settings-form .settings-form {
+  display: grid;
   gap: 16px;
+}
+
+.workspace-card--settings-form .settings-form__row {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px);
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .workspace-card--settings-form .settings-form__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
   gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
-.workspace-card--settings-form .settings-form label:last-child {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.workspace-card--settings-form .settings-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.workspace-card--settings-form-primary {
+  grid-column: 1 / -1;
 }
 
 .workspace-card--settings-form .settings-form input[type="checkbox"] {
@@ -224,6 +242,14 @@
   .workspace-grid--settings-modules,
   .settings-status-grid,
   .overview-grid--dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-card--settings-form .settings-form__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-card--settings-form .settings-form__row {
     grid-template-columns: 1fr;
   }
 

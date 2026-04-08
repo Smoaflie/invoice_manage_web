@@ -32,7 +32,7 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "记录 多维表格" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "仪表盘 综合视图" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "协作 同步会话" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "配置中心 桥接" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "配置中心 OCR API" })).toBeInTheDocument();
     expect(screen.getByTestId("dashboard-shell")).toHaveTextContent("records");
     expect(screen.getByText("本地工作台数据已加载。")).toBeInTheDocument();
     expect(screen.getByText("12 条记录")).toBeInTheDocument();
@@ -48,7 +48,7 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "协作 同步会话" }));
     expect(screen.getByTestId("dashboard-shell")).toHaveTextContent("collaboration");
 
-    await user.click(screen.getByRole("button", { name: "配置中心 桥接" }));
+    await user.click(screen.getByRole("button", { name: "配置中心 OCR API" }));
     expect(screen.getByTestId("dashboard-shell")).toHaveTextContent("settings");
     expect(screen.getByRole("heading", { name: "配置中心" })).toBeInTheDocument();
     expect(screen.getByText("Operations Room")).toBeInTheDocument();

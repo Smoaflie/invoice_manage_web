@@ -71,14 +71,14 @@ export const agentLogicMapBlueprint: {
   ],
   nodes: [
     {
-      id: "file-bridge",
+      id: "file-api",
       laneId: "runtime",
-      title: "文件与桥接",
-      summary: "文件句柄、浏览器扩展桥和本地导入导出能力。",
+      title: "文件与 API",
+      summary: "文件句柄、同源 OCR API 和本地导入导出能力。",
       scope: "只负责接触浏览器 API，不负责业务判断。",
-      inputs: ["用户文件", "扩展连接状态", "传输触发动作"],
-      outputs: ["可读取文件", "桥接可用性", "导入导出载荷"],
-      sideEffects: ["File System Access", "浏览器扩展调用"],
+      inputs: ["用户文件", "OCR API 配置", "传输触发动作"],
+      outputs: ["可读取文件", "OCR API 请求", "导入导出载荷"],
+      sideEffects: ["File System Access", "同源 OCR API 调用"],
     },
     {
       id: "ocr-db",
@@ -152,7 +152,7 @@ export const agentLogicMapBlueprint: {
     },
   ],
   edges: [
-    { from: "file-bridge", to: "ocr-db", label: "文件进入 OCR / DB" },
+    { from: "file-api", to: "ocr-db", label: "文件进入 OCR / DB" },
     { from: "ocr-db", to: "workspace-query", label: "记录供查询模型消费" },
     { from: "workspace-schema", to: "workspace-query", label: "字段参与派生计算" },
     { from: "workspace-query", to: "workspace-controller", label: "结果驱动表格与看板" },
@@ -173,7 +173,7 @@ export const agentLogicMapBlueprint: {
     },
     {
       title: "保留运行时适配器边界",
-      detail: "文件系统、OCR、Dexie 和浏览器桥继续留在 runtime lane，通过显式输入输出接给状态模型。",
+      detail: "文件系统、OCR API 和 Dexie 继续留在 runtime lane，通过显式输入输出接给状态模型。",
       impact: "副作用集中，测试覆盖更稳定。",
     },
   ],

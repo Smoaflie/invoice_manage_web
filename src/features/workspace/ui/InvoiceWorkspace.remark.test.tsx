@@ -119,4 +119,35 @@ describe("InvoiceWorkspace remark", () => {
     expect(screen.getByText("原始备注")).toBeInTheDocument();
     expect(screen.getByText("人工批注")).toBeInTheDocument();
   });
+
+  test("renders OCR audit logs with user-facing labels", () => {
+    const invoiceDocument = buildRow();
+    const auditLogs: InvoiceAuditLog[] = [
+      {
+        id: "audit-1",
+        invoiceDocumentId: "doc-1",
+        changedAt: "2026-04-08T10:00:00.000Z",
+        changeType: "ocr_parse",
+        targetField: "ocr识别",
+        beforeValue: "baidu 2026-04-08T09:00:00.000Z",
+        afterValue: "tencent 2026-04-08T10:00:00.000Z",
+      },
+      {
+        id: "audit-2",
+        invoiceDocumentId: "doc-1",
+        changedAt: "2026-04-08T10:00:00.000Z",
+        changeType: "ocr_parse",
+        targetField: "invoiceNumber",
+        beforeValue: "旧号码",
+        afterValue: "新号码",
+      },
+    ];
+
+    render(<InvoiceDetailsDrawer invoiceDocument={invoiceDocument} auditLogs={auditLogs} open onClose={() => {}} onEdit={() => {}} onOpenPdf={() => {}} />);
+
+    expect(screen.getByText("OCR 重新识别")).toBeInTheDocument();
+    expect(screen.getByText("百度 -> 腾讯")).toBeInTheDocument();
+    expect(screen.getByText("OCR 更新发票号码")).toBeInTheDocument();
+    expect(screen.getByText("旧号码 -> 新号码")).toBeInTheDocument();
+  });
 });

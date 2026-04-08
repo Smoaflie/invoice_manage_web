@@ -1,9 +1,10 @@
 export type SettingsKey =
   | "ocr.vendor"
   | "ocr.enabled"
-  | "ocr.appId"
-  | "ocr.apiKey"
-  | "ocr.secretKey"
+  | "ocr.baiduApiKey"
+  | "ocr.baiduSecretKey"
+  | "ocr.tencentSecretId"
+  | "ocr.tencentSecretKey"
   | "app.theme"
   | "app.lastOpenedFolder"
   | "ui.invoiceColumns"
@@ -16,9 +17,10 @@ export type SettingsKey =
 export interface SettingsValueMap {
   "ocr.vendor": string | null;
   "ocr.enabled": boolean;
-  "ocr.appId": string | null;
-  "ocr.apiKey": string | null;
-  "ocr.secretKey": string | null;
+  "ocr.baiduApiKey": string | null;
+  "ocr.baiduSecretKey": string | null;
+  "ocr.tencentSecretId": string | null;
+  "ocr.tencentSecretKey": string | null;
   "app.theme": "system" | "light" | "dark";
   "app.lastOpenedFolder": string | null;
   "ui.invoiceColumns": string[];
@@ -45,9 +47,10 @@ export type AppSettings = {
   ocr: {
     vendor: string | null;
     enabled: boolean;
-    appId: string | null;
-    apiKey: string | null;
-    secretKey: string | null;
+    baiduApiKey: string | null;
+    baiduSecretKey: string | null;
+    tencentSecretId: string | null;
+    tencentSecretKey: string | null;
   };
   app: {
     theme: "system" | "light" | "dark";

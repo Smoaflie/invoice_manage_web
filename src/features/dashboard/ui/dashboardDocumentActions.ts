@@ -1,11 +1,14 @@
 import { appDb } from "../../../shared/db/appDb";
+import type { SettingsKey } from "../../../shared/types/settings";
 import { getStoredHandle } from "../../../shared/fs/fileHandles";
 import { openInvoicePdf } from "../../documents/application/openInvoicePdf";
-import { OCR_VENDORS, type OcrClientConfig, type OcrVendor } from "../../ocr/infrastructure/ocrClients";
+import type { OcrClientConfig } from "../../ocr/infrastructure/ocrClients";
+import { getOcrProvider, isOcrProviderId } from "../../ocr/providers/registry";
+import type { OcrProviderCredentials, OcrProviderId } from "../../ocr/providers/types";
 
 export type DashboardOcrSettings = {
-  vendor: string | null;
-  enabled: boolean;
+  vendor: OcrProviderId | null;
+  values: Partial<Record<SettingsKey, string | null>>;
 };
 
 export async function loadDashboardRows() {
@@ -13,28 +16,33 @@ export async function loadDashboardRows() {
 }
 
 export async function loadDashboardOcrSettings(): Promise<DashboardOcrSettings> {
-  const [vendorSetting, enabledSetting] = await Promise.all([
-    appDb.settings.get("ocr.vendor"),
-    appDb.settings.get("ocr.enabled"),
-  ]);
+  const settings = await appDb.settings.toArray();
+  const vendorSetting = settings.find((entry) => entry.key === "ocr.vendor");
+  const values = Object.fromEntries(
+    settings
+      .filter((entry): entry is typeof entry & { value: string | null } => typeof entry.value === "string" || entry.value === null)
+      .map((entry) => [entry.key, entry.value]),
+  ) as Partial<Record<SettingsKey, string | null>>;
 
   return {
-    vendor: typeof vendorSetting?.value === "string" || vendorSetting?.value === null ? vendorSetting.value : null,
-    enabled: typeof enabledSetting?.value === "boolean" ? enabledSetting.value : false,
+    vendor: typeof vendorSetting?.value === "string" && isOcrProviderId(vendorSetting.value) ? vendorSetting.value : null,
+    values,
   };
 }
 
 export function toOcrClientConfig(settings: DashboardOcrSettings): OcrClientConfig {
-  if (!settings.enabled) {
-    throw new Error("请先在设置中启用 OCR。");
-  }
-
-  if (!isSupportedOcrVendor(settings.vendor)) {
+  if (!settings.vendor || !isOcrProviderId(settings.vendor)) {
     throw new Error("请先选择 OCR 供应商。");
   }
 
+  const provider = getOcrProvider(settings.vendor);
+  const credentials = Object.fromEntries(
+    provider.getSettingsFields().map((field) => [field.id, settings.values[field.settingKey] ?? ""]),
+  ) as OcrProviderCredentials;
+
   return {
     vendor: settings.vendor,
+    credentials,
   };
 }
 
@@ -109,6 +117,3 @@ export function parseTags(tagsText: string) {
   return [...new Set(tagsText.split(/[\s,\n，]+/).map((item) => item.trim()).filter((item) => item.length > 0))];
 }
 
-function isSupportedOcrVendor(vendor: string | null): vendor is OcrVendor {
-  return vendor !== null && OCR_VENDORS.includes(vendor as OcrVendor);
-}

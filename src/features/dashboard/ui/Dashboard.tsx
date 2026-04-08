@@ -3,12 +3,11 @@ import { appDb } from "../../../shared/db/appDb";
 import { getStoredHandle } from "../../../shared/fs/fileHandles";
 import type { InvoiceAuditLog } from "../../../shared/types/invoiceAuditLog";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
+import { batchParseInvoices } from "../../documents/application/batchParseInvoices";
 import { deleteInvoiceDocuments } from "../../documents/application/deleteInvoiceDocuments";
 import { rehydrateBindings } from "../../files/application/rehydrateBindings";
-import { hasOcrExtensionBridge } from "../../ocr/bridge/extensionBridge";
 import { parseInvoice } from "../../ocr/application/parseInvoice";
 import { requestInvoiceOcr } from "../../ocr/infrastructure/ocrClients";
-import { bulkReparseInvoiceDocuments } from "./dashboardMutations";
 import { InvoiceDetailsDrawer } from "../../invoices/ui/InvoiceDetailsDrawer";
 import { InvoiceEditDialog, type InvoiceEditValues } from "../../invoices/ui/InvoiceEditDialog";
 import { OcrSettingsForm } from "../../settings/ui/OcrSettingsForm";
@@ -43,7 +42,6 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
   const [invoiceDocuments, setInvoiceDocuments] = useState<InvoiceDocument[]>([]);
   const [dashboardMessage, setDashboardMessage] = useState("正在加载本地工作台数据...");
   const [parsingInvoiceDocumentId, setParsingInvoiceDocumentId] = useState<string | null>(null);
-  const [bridgeConnected, setBridgeConnected] = useState<boolean | null>(null);
   const [detailInvoiceDocumentId, setDetailInvoiceDocumentId] = useState<string | null>(null);
   const [auditLogs, setAuditLogs] = useState<InvoiceAuditLog[]>([]);
   const [editSession, setEditSession] = useState<EditSession | null>(null);
@@ -51,7 +49,6 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
     activeView,
     dashboardMessage,
     invoiceDocumentCount: invoiceDocuments.length,
-    bridgeConnected,
     onSidebarStatusChange,
   });
 
@@ -62,9 +59,13 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
   const selectedTargetId = detailInvoiceDocumentId ?? editSession?.invoiceDocumentId ?? null;
   const selectedInvoiceDocument = selectedTargetId ? invoiceDocuments.find((row) => row.id === selectedTargetId) ?? null : null;
 
-  const openDetailDrawer = async (invoiceDocumentId: string) => {
+  const refreshAuditLogs = async (invoiceDocumentId: string) => {
     const logs = await appDb.invoiceAuditLogs.where("invoiceDocumentId").equals(invoiceDocumentId).sortBy("changedAt");
     setAuditLogs(logs.reverse());
+  };
+
+  const openDetailDrawer = async (invoiceDocumentId: string) => {
+    await refreshAuditLogs(invoiceDocumentId);
     setDetailInvoiceDocumentId(invoiceDocumentId);
   };
 
@@ -76,15 +77,24 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
     }
   };
 
-  const handleParseInvoice = async (invoiceDocumentId: string) => {
+  const handleParseInvoice = async (
+    invoiceDocumentId: string,
+    statusMessages: {
+      start?: string | null;
+      success?: (invoiceNumber: string) => string | null;
+      failure?: (message: string) => string | null;
+    } = {
+      start: "正在识别发票...",
+      success: (invoiceNumber) => `已识别发票 ${invoiceNumber}。`,
+      failure: (message) => message,
+    },
+  ) => {
     setParsingInvoiceDocumentId(invoiceDocumentId);
-    setDashboardMessage("正在识别发票...");
+    if (statusMessages.start) {
+      setDashboardMessage(statusMessages.start);
+    }
 
     try {
-      if (!(await hasOcrExtensionBridge())) {
-        throw new Error("OCR 扩展未连接。");
-      }
-
       const ocrConfig = toOcrClientConfig(await loadDashboardOcrSettings());
       const parsedInvoice = await parseInvoice(invoiceDocumentId, {
         vendor: ocrConfig.vendor,
@@ -94,9 +104,21 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
       });
 
       await refreshDashboardRows();
-      setDashboardMessage(`已识别发票 ${parsedInvoice.invoiceNumber}。`);
+      if (detailInvoiceDocumentId === invoiceDocumentId) {
+        await refreshAuditLogs(invoiceDocumentId);
+      }
+      const successMessage = statusMessages.success?.(parsedInvoice.invoiceNumber);
+      if (successMessage) {
+        setDashboardMessage(successMessage);
+      }
+      return parsedInvoice;
     } catch (error) {
-      setDashboardMessage(error instanceof Error ? error.message : "发票识别失败。");
+      const message = error instanceof Error ? error.message : "发票识别失败。";
+      const failureMessage = statusMessages.failure?.(message);
+      if (failureMessage) {
+        setDashboardMessage(failureMessage);
+      }
+      throw (error instanceof Error ? error : new Error(message));
     } finally {
       setParsingInvoiceDocumentId(null);
     }
@@ -120,8 +142,23 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
   };
 
   const handleBulkReparseInvoices = async (invoiceDocumentIds: string[]) => {
-    const result = await bulkReparseInvoiceDocuments(invoiceDocuments, invoiceDocumentIds, handleParseInvoice);
-    setDashboardMessage(`批量识别完成：成功 ${result.parsedIds.length}，跳过 ${result.skippedIds.length}，失败 ${result.failedIds.length}。`);
+    const targetRows = invoiceDocuments.filter((row) => invoiceDocumentIds.includes(row.id));
+    setDashboardMessage(`开始批量 OCR：共 ${targetRows.length} 条。`);
+    const result = await batchParseInvoices(
+      targetRows,
+      (invoiceDocumentId) =>
+        handleParseInvoice(invoiceDocumentId, {
+          start: null,
+          success: () => null,
+          failure: () => null,
+        }),
+      (progress) => {
+        setDashboardMessage(
+          `批量 OCR 进行中：共 ${progress.totalCount} 条，已处理 ${progress.completedCount} 条，成功 ${progress.parsedCount}，失败 ${progress.failedCount}，跳过 ${progress.skippedCount}。`,
+        );
+      },
+    );
+    setDashboardMessage(`批量 OCR 完成：共 ${targetRows.length} 条，成功 ${result.parsedIds.length}，失败 ${result.failedIds.length}，跳过 ${result.skippedIds.length}。`);
   };
 
   const handleSaveEdits = async (values: InvoiceEditValues) => {
@@ -186,26 +223,6 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
     };
   }, []);
 
-  useEffect(() => {
-    let active = true;
-
-    void hasOcrExtensionBridge()
-      .then((connected) => {
-        if (active) {
-          setBridgeConnected(connected);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setBridgeConnected(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
   if (activeView === "records" || activeView === "dashboard") {
     return (
       <>
@@ -219,6 +236,7 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
           onEdit={(invoiceDocumentId) => setEditSession({ invoiceDocumentId, mode: "manual-edit" })}
           onOpenPdf={handleOpenPdf}
           onDelete={handleDeleteDocuments}
+          onReparseSingle={handleParseInvoice}
           onBulkReparse={handleBulkReparseInvoices}
           onRefresh={refreshDashboardRows}
         />
@@ -251,9 +269,7 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
   if (activeView === "settings") {
     return (
       <SettingsWorkspace
-        message={dashboardMessage}
         settingsForm={<OcrSettingsForm />}
-        bridgeConnected={bridgeConnected}
         invoiceDocuments={invoiceDocuments}
       />
     );

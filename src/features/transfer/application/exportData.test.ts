@@ -116,7 +116,7 @@ describe("exportData", () => {
       updatedAt: "2026-03-30T00:00:00.000Z",
     });
     await appDb.settings.put({
-      key: "ocr.apiKey",
+      key: "ocr.baiduApiKey",
       value: "secret-web-key",
       updatedAt: "2026-03-30T00:00:00.000Z",
     });
@@ -146,7 +146,7 @@ describe("exportData", () => {
     expect(payload).not.toHaveProperty("invoiceRecords");
     expect(payload.settings).not.toContainEqual(
       expect.objectContaining({
-        key: "ocr.apiKey",
+        key: "ocr.baiduApiKey",
       }),
     );
   });

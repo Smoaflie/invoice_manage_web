@@ -120,7 +120,7 @@ export const transferInvoiceDocumentSchema = invoiceDocumentSchema.omit({
   bindingErrorType: true,
 });
 
-export const invoiceAuditLogSchema = z.object({ id: z.string(), invoiceDocumentId: z.string(), changedAt: z.string(), changeType: z.enum(["manual_create", "manual_edit", "manual_tag_update", "manual_annotation_update"]), targetField: z.string(), beforeValue: z.string(), afterValue: z.string() });
+export const invoiceAuditLogSchema = z.object({ id: z.string(), invoiceDocumentId: z.string(), changedAt: z.string(), changeType: z.enum(["manual_create", "manual_edit", "manual_tag_update", "manual_annotation_update", "ocr_parse"]), targetField: z.string(), beforeValue: z.string(), afterValue: z.string() });
 
 export const tagDefinitionSchema = z.object({ name: z.string(), color: z.string(), enabled: z.boolean(), description: z.string() });
 
@@ -165,9 +165,10 @@ export const savedViewSchema = z.object({
 export const settingsKeySchema = z.enum([
   "ocr.vendor",
   "ocr.enabled",
-  "ocr.appId",
-  "ocr.apiKey",
-  "ocr.secretKey",
+  "ocr.baiduApiKey",
+  "ocr.baiduSecretKey",
+  "ocr.tencentSecretId",
+  "ocr.tencentSecretKey",
   "app.theme",
   "app.lastOpenedFolder",
   "ui.invoiceColumns",
@@ -178,15 +179,23 @@ export const settingsKeySchema = z.enum([
   "ui.workspaceSelectedIds",
 ]);
 
-export const ocrSettingsSchema = z.object({ vendor: z.string().nullable(), enabled: z.boolean(), appId: z.string().nullable(), apiKey: z.string().nullable(), secretKey: z.string().nullable() });
+export const ocrSettingsSchema = z.object({
+  vendor: z.string().nullable(),
+  enabled: z.boolean(),
+  baiduApiKey: z.string().nullable(),
+  baiduSecretKey: z.string().nullable(),
+  tencentSecretId: z.string().nullable(),
+  tencentSecretKey: z.string().nullable(),
+});
 
 export const appSettingsSchema = z.object({ ocr: ocrSettingsSchema, app: z.object({ theme: z.enum(["system", "light", "dark"]), lastOpenedFolder: z.string().nullable() }) });
 
 const ocrVendorSettingRecordSchema = z.object({ key: z.literal("ocr.vendor"), value: z.string().nullable(), updatedAt: z.string() });
 const ocrEnabledSettingRecordSchema = z.object({ key: z.literal("ocr.enabled"), value: z.boolean(), updatedAt: z.string() });
-const ocrAppIdSettingRecordSchema = z.object({ key: z.literal("ocr.appId"), value: z.string().nullable(), updatedAt: z.string() });
-const ocrApiKeySettingRecordSchema = z.object({ key: z.literal("ocr.apiKey"), value: z.string().nullable(), updatedAt: z.string() });
-const ocrSecretKeySettingRecordSchema = z.object({ key: z.literal("ocr.secretKey"), value: z.string().nullable(), updatedAt: z.string() });
+const ocrBaiduApiKeySettingRecordSchema = z.object({ key: z.literal("ocr.baiduApiKey"), value: z.string().nullable(), updatedAt: z.string() });
+const ocrBaiduSecretKeySettingRecordSchema = z.object({ key: z.literal("ocr.baiduSecretKey"), value: z.string().nullable(), updatedAt: z.string() });
+const ocrTencentSecretIdSettingRecordSchema = z.object({ key: z.literal("ocr.tencentSecretId"), value: z.string().nullable(), updatedAt: z.string() });
+const ocrTencentSecretKeySettingRecordSchema = z.object({ key: z.literal("ocr.tencentSecretKey"), value: z.string().nullable(), updatedAt: z.string() });
 const appThemeSettingRecordSchema = z.object({ key: z.literal("app.theme"), value: z.enum(["system", "light", "dark"]), updatedAt: z.string() });
 const appLastOpenedFolderSettingRecordSchema = z.object({ key: z.literal("app.lastOpenedFolder"), value: z.string().nullable(), updatedAt: z.string() });
 const uiInvoiceColumnsSettingRecordSchema = z.object({ key: z.literal("ui.invoiceColumns"), value: z.array(z.string()), updatedAt: z.string() });
@@ -196,7 +205,22 @@ const uiDashboardInvoiceViewIdSettingRecordSchema = z.object({ key: z.literal("u
 const uiActiveWorkspaceViewIdSettingRecordSchema = z.object({ key: z.literal("ui.activeWorkspaceViewId"), value: z.string().nullable(), updatedAt: z.string() });
 const uiWorkspaceSelectedIdsSettingRecordSchema = z.object({ key: z.literal("ui.workspaceSelectedIds"), value: z.array(z.string()), updatedAt: z.string() });
 
-export const settingRecordSchema = z.discriminatedUnion("key", [ocrVendorSettingRecordSchema, ocrEnabledSettingRecordSchema, ocrAppIdSettingRecordSchema, ocrApiKeySettingRecordSchema, ocrSecretKeySettingRecordSchema, appThemeSettingRecordSchema, appLastOpenedFolderSettingRecordSchema, uiInvoiceColumnsSettingRecordSchema, uiActiveInvoiceViewIdSettingRecordSchema, uiActiveFileViewIdSettingRecordSchema, uiDashboardInvoiceViewIdSettingRecordSchema, uiActiveWorkspaceViewIdSettingRecordSchema, uiWorkspaceSelectedIdsSettingRecordSchema]);
+export const settingRecordSchema = z.discriminatedUnion("key", [
+  ocrVendorSettingRecordSchema,
+  ocrEnabledSettingRecordSchema,
+  ocrBaiduApiKeySettingRecordSchema,
+  ocrBaiduSecretKeySettingRecordSchema,
+  ocrTencentSecretIdSettingRecordSchema,
+  ocrTencentSecretKeySettingRecordSchema,
+  appThemeSettingRecordSchema,
+  appLastOpenedFolderSettingRecordSchema,
+  uiInvoiceColumnsSettingRecordSchema,
+  uiActiveInvoiceViewIdSettingRecordSchema,
+  uiActiveFileViewIdSettingRecordSchema,
+  uiDashboardInvoiceViewIdSettingRecordSchema,
+  uiActiveWorkspaceViewIdSettingRecordSchema,
+  uiWorkspaceSelectedIdsSettingRecordSchema,
+]);
 
 export const transferSettingRecordSchema = settingRecordSchema;
 

@@ -11,7 +11,7 @@ const NAV_ITEMS: Array<{ id: DashboardView; label: string; caption: string }> = 
   { id: "records", label: "记录", caption: "多维表格" },
   { id: "dashboard", label: "仪表盘", caption: "综合视图" },
   { id: "collaboration", label: "协作", caption: "同步会话" },
-  { id: "settings", label: "配置中心", caption: "桥接" },
+  { id: "settings", label: "配置中心", caption: "OCR API" },
 ];
 
 export function AppSidebar({ activeView, status, onSelectView }: AppSidebarProps) {

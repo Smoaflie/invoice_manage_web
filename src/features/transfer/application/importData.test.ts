@@ -43,7 +43,7 @@ describe("importData", () => {
       filterGroupRules: [],
       savedViews: [],
       settings: [
-        { key: "ocr.apiKey", value: "secret-web-key", updatedAt: "2026-03-30T00:00:00.000Z" },
+        { key: "ocr.baiduApiKey", value: "secret-web-key", updatedAt: "2026-03-30T00:00:00.000Z" },
         { key: "ocr.vendor", value: "baidu", updatedAt: "2026-03-30T00:00:00.000Z" },
       ],
     });
@@ -54,7 +54,7 @@ describe("importData", () => {
     expect(await appDb.filterGroupRules.count()).toBe(0);
     expect(await appDb.savedViews.count()).toBe(0);
     expect(await appDb.settings.count()).toBe(1);
-    expect(await appDb.settings.get("ocr.apiKey")).toBeUndefined();
+    expect(await appDb.settings.get("ocr.baiduApiKey")).toBeUndefined();
     expect(await appDb.settings.get("ocr.vendor")).toMatchObject({ value: "baidu" });
     expect(await appDb.invoiceDocuments.get("doc-1")).toMatchObject({
       handleRef: "",
@@ -107,7 +107,7 @@ describe("importData", () => {
       tagDefinitions: [],
       tagGroups: [],
       tagGroupLinks: [],
-      filterGroups: [{ id: "filter-group-1", name: "购买方分组", sortOrder: 1 }],
+      filterGroups: [{ id: "filter-group-1", name: "购买方分组", root: { id: "condition-root", kind: "group", mode: "all", children: [] }, createdAt: "2026-03-30T00:00:00.000Z", updatedAt: "2026-03-30T00:00:00.000Z" }],
       filterGroupRules: [{ id: "filter-rule-1", groupId: "filter-group-1", label: "Buyer", field: "buyerName", pattern: "Buyer" }],
       savedViews: [
         {

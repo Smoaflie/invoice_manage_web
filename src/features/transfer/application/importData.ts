@@ -10,7 +10,7 @@ import type { TagDefinition, TagGroup, TagGroupLink } from "../../../shared/type
 import { legacyTransferDataSchema, transferDataSchema } from "../../../shared/validation/schemas";
 import { migrateLegacyTables } from "../../documents/application/migrateLegacyTables";
 
-const WEB_ONLY_OCR_SECRET_KEYS = new Set(["ocr.appId", "ocr.apiKey", "ocr.secretKey"]);
+const WEB_ONLY_OCR_SECRET_KEYS = new Set(["ocr.baiduApiKey", "ocr.baiduSecretKey", "ocr.tencentSecretId", "ocr.tencentSecretKey"]);
 
 export type ImportDataPayload = {
   invoiceDocuments?: Array<Omit<InvoiceDocument, "handleRef" | "bindingStatus" | "bindingErrorType">>;
