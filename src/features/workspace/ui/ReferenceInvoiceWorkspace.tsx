@@ -93,6 +93,7 @@ export function ReferenceInvoiceWorkspace(props: ReferenceInvoiceWorkspaceProps)
             fieldOrder={controller.orderedVisibleFieldIds}
             recordColumnWidths={controller.recordColumnWidths}
             itemColumnWidths={controller.itemColumnWidths}
+            tableColumnWidths={controller.tableColumnWidths}
             selectedIdSet={controller.selectedIdSet}
             dragActive={controller.dragActive}
             importLabel={controller.importingFiles ? "导入中..." : "文件会直接进入当前记录工作区。"}
@@ -107,6 +108,7 @@ export function ReferenceInvoiceWorkspace(props: ReferenceInvoiceWorkspaceProps)
             onToggleGroup={controller.handleToggleGroup}
             onRecordColumnWidthsChange={controller.setRecordColumnWidths}
             onItemColumnWidthsChange={controller.setItemColumnWidths}
+            onTableColumnWidthsChange={controller.setTableColumnWidths}
             onDragOver={(event) => { event.preventDefault(); controller.setDragActive(true); }}
             onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) { controller.setDragActive(false); } }}
             onDrop={(event) => { event.preventDefault(); controller.setDragActive(false); controller.handleDropImport(event); }}

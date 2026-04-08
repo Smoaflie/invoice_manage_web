@@ -26,6 +26,7 @@ describe("workspaceViewDrafts", () => {
           fieldOrder: ["invoiceNumber", "buyerName"],
           recordColumnWidths: { invoiceNumber: 180 },
           itemColumnWidths: { name: 160 },
+          tableColumnWidths: { itemDetails: 132, actions: 274 },
         },
         visibleColumns: ["invoiceNumber", "buyerName"],
       },
@@ -36,6 +37,7 @@ describe("workspaceViewDrafts", () => {
       query: expect.objectContaining({
         searchText: "华北",
         fieldOrder: ["invoiceNumber", "buyerName"],
+        tableColumnWidths: { itemDetails: 132, actions: 274 },
       }),
       visibleColumns: ["invoiceNumber", "buyerName"],
     });

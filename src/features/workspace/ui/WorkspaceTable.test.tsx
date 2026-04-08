@@ -74,6 +74,7 @@ function renderWorkspaceTable(overrides: Partial<Parameters<typeof WorkspaceTabl
       fieldOrder={["invoiceNumber", "buyerName"]}
       recordColumnWidths={{ invoiceNumber: 180, buyerName: 180 }}
       itemColumnWidths={{ name: 160, type: 140, amount: 120 }}
+      tableColumnWidths={{ itemDetails: 120, actions: 286 }}
       selectedIdSet={new Set()}
       onToggleSelected={() => {}}
       onToggleAll={() => {}}
@@ -85,6 +86,7 @@ function renderWorkspaceTable(overrides: Partial<Parameters<typeof WorkspaceTabl
       onToggleGroup={() => {}}
       onRecordColumnWidthsChange={() => {}}
       onItemColumnWidthsChange={() => {}}
+      onTableColumnWidthsChange={() => {}}
       {...overrides}
     />,
   );
@@ -280,6 +282,7 @@ describe("WorkspaceTable", () => {
         fieldOrder={[]}
         recordColumnWidths={{}}
         itemColumnWidths={{ name: 160, type: 140, amount: 120, num: 120, unit_price: 120, tax: 120, tax_rate: 120, unit: 120 }}
+        tableColumnWidths={{ itemDetails: 120, actions: 286 }}
         selectedIdSet={new Set()}
         onToggleSelected={() => {}}
         onToggleAll={() => {}}
@@ -291,6 +294,7 @@ describe("WorkspaceTable", () => {
         onToggleGroup={() => {}}
         onRecordColumnWidthsChange={() => {}}
         onItemColumnWidthsChange={() => {}}
+        onTableColumnWidthsChange={() => {}}
       />,
     );
 
@@ -344,6 +348,7 @@ describe("WorkspaceTable", () => {
         fieldOrder={[]}
         recordColumnWidths={{}}
         itemColumnWidths={{ name: 160, type: 140, amount: 120, num: 120, unit_price: 120, tax: 120, tax_rate: 120, unit: 120 }}
+        tableColumnWidths={{ itemDetails: 120, actions: 286 }}
         selectedIdSet={new Set()}
         onToggleSelected={() => {}}
         onToggleAll={() => {}}
@@ -355,6 +360,7 @@ describe("WorkspaceTable", () => {
         onToggleGroup={() => {}}
         onRecordColumnWidthsChange={() => {}}
         onItemColumnWidthsChange={() => {}}
+        onTableColumnWidthsChange={() => {}}
       />,
     );
 
@@ -396,6 +402,7 @@ describe("WorkspaceTable", () => {
         fieldOrder={[]}
         recordColumnWidths={{}}
         itemColumnWidths={{ name: 160, type: 140, amount: 120 }}
+        tableColumnWidths={{ itemDetails: 120, actions: 286 }}
         selectedIdSet={new Set()}
         onToggleSelected={() => {}}
         onToggleAll={() => {}}
@@ -407,6 +414,7 @@ describe("WorkspaceTable", () => {
         onToggleGroup={() => {}}
         onRecordColumnWidthsChange={() => {}}
         onItemColumnWidthsChange={onItemColumnWidthsChange}
+        onTableColumnWidthsChange={() => {}}
       />,
     );
 
@@ -420,6 +428,24 @@ describe("WorkspaceTable", () => {
       name: 180,
       type: 120,
       amount: 120,
+    });
+  });
+
+  test("resizes item-details and actions columns through header handles", () => {
+    const onTableColumnWidthsChange = vi.fn();
+
+    renderWorkspaceTable({
+      tableColumnWidths: { itemDetails: 120, actions: 286 },
+      onTableColumnWidthsChange,
+    });
+
+    fireEvent.mouseDown(screen.getByRole("button", { name: "调整列宽 商品详情" }), { clientX: 420 });
+    fireEvent.mouseMove(window, { clientX: 450 });
+    fireEvent.mouseUp(window, { clientX: 450 });
+
+    expect(onTableColumnWidthsChange).toHaveBeenCalledWith({
+      itemDetails: 150,
+      actions: 256,
     });
   });
 
@@ -456,6 +482,7 @@ describe("WorkspaceTable", () => {
         fieldOrder={[]}
         recordColumnWidths={{}}
         itemColumnWidths={{ name: 320, type: 140, amount: 120, num: 120, unit_price: 120, tax: 120, tax_rate: 120, unit: 120 }}
+        tableColumnWidths={{ itemDetails: 120, actions: 286 }}
         selectedIdSet={new Set()}
         onToggleSelected={() => {}}
         onToggleAll={() => {}}
@@ -467,6 +494,7 @@ describe("WorkspaceTable", () => {
         onToggleGroup={() => {}}
         onRecordColumnWidthsChange={() => {}}
         onItemColumnWidthsChange={() => {}}
+        onTableColumnWidthsChange={() => {}}
       />,
     );
 
@@ -505,6 +533,7 @@ describe("WorkspaceTable", () => {
         fieldOrder={[]}
         recordColumnWidths={{}}
         itemColumnWidths={{ name: 160, type: 140, amount: 120 }}
+        tableColumnWidths={{ itemDetails: 120, actions: 286 }}
         selectedIdSet={new Set()}
         onToggleSelected={() => {}}
         onToggleAll={() => {}}
@@ -516,6 +545,7 @@ describe("WorkspaceTable", () => {
         onToggleGroup={() => {}}
         onRecordColumnWidthsChange={() => {}}
         onItemColumnWidthsChange={() => {}}
+        onTableColumnWidthsChange={() => {}}
       />,
     );
 

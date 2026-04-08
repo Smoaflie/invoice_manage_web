@@ -1,17 +1,20 @@
+import type { WorkspaceTableColumnWidths } from "../../../shared/types/savedView";
 import type { WorkspaceFieldDefinition } from "../../../shared/types/workspaceField";
 import { useWorkspaceColumnResize } from "./useWorkspaceColumnResize";
-import { ACTIONS_COLUMN_WIDTH, INDEX_COLUMN_WIDTH, ITEM_DETAILS_COLUMN_WIDTH, SELECT_COLUMN_WIDTH, cellWidth } from "./workspaceTableLayout";
+import { ACTIONS_COLUMN_MIN_WIDTH, INDEX_COLUMN_WIDTH, ITEM_DETAILS_COLUMN_MIN_WIDTH, SELECT_COLUMN_WIDTH, cellWidth } from "./workspaceTableLayout";
 
 type WorkspaceTableHeaderProps = {
   allSelected: boolean;
   visibleFields: WorkspaceFieldDefinition[];
   recordColumnWidths: Record<string, number>;
+  tableColumnWidths: WorkspaceTableColumnWidths;
   onToggleAll: () => void;
   onRecordColumnWidthsChange: (nextWidths: Record<string, number>) => void;
+  onTableColumnWidthsChange: (nextWidths: WorkspaceTableColumnWidths) => void;
 };
 
 export function WorkspaceTableHeader(props: WorkspaceTableHeaderProps) {
-  const { guideX, startResize } = useWorkspaceColumnResize({
+  const { guideX: recordGuideX, startResize } = useWorkspaceColumnResize({
     getWidths: (leftKey, rightKey) => {
       const leftWidth = props.recordColumnWidths[leftKey];
       const rightWidth = props.recordColumnWidths[rightKey];
@@ -24,6 +27,23 @@ export function WorkspaceTableHeader(props: WorkspaceTableHeaderProps) {
         [rightKey]: widths.rightWidth,
       }),
   });
+  const { guideX: tableGuideX, startResize: startTableResize } = useWorkspaceColumnResize({
+    getWidths: (leftKey, rightKey) =>
+      leftKey === "itemDetails" && rightKey === "actions"
+        ? {
+            leftWidth: props.tableColumnWidths.itemDetails,
+            rightWidth: props.tableColumnWidths.actions,
+            leftMinWidth: ITEM_DETAILS_COLUMN_MIN_WIDTH,
+            rightMinWidth: ACTIONS_COLUMN_MIN_WIDTH,
+          }
+        : null,
+    onCommit: (_, __, widths) =>
+      props.onTableColumnWidthsChange({
+        itemDetails: widths.leftWidth,
+        actions: widths.rightWidth,
+      }),
+  });
+  const guideX = recordGuideX ?? tableGuideX;
 
   return (
     <>
@@ -50,10 +70,16 @@ export function WorkspaceTableHeader(props: WorkspaceTableHeaderProps) {
             </div>
           );
         })}
-        <div className="table-cell table-cell--head table-cell--item-details" style={cellWidth(ITEM_DETAILS_COLUMN_WIDTH)}>
-          商品详情
+        <div className="table-cell table-cell--head table-cell--head-resizable table-cell--item-details" style={cellWidth(props.tableColumnWidths.itemDetails)}>
+          <span>商品详情</span>
+          <button
+            type="button"
+            className="table-column-resize-handle"
+            aria-label="调整列宽 商品详情"
+            onMouseDown={(event) => startTableResize(event, "itemDetails", "actions")}
+          />
         </div>
-        <div className="table-cell table-cell--head table-cell--actions" style={cellWidth(ACTIONS_COLUMN_WIDTH)}>
+        <div className="table-cell table-cell--head table-cell--actions" style={cellWidth(props.tableColumnWidths.actions)}>
           操作
         </div>
       </div>

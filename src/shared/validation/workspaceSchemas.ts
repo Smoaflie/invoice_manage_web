@@ -37,6 +37,7 @@ export const workspaceSavedViewQuerySchema = z.object({
   fieldOrder: z.array(z.string()),
   recordColumnWidths: z.record(z.string(), z.number()).optional(),
   itemColumnWidths: z.record(z.string(), z.number()).optional(),
+  tableColumnWidths: z.record(z.string(), z.number()).optional(),
 });
 
 export const filterGroupDocumentSchema = z.object({

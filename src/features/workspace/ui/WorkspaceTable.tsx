@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useState } from "react";
+import type { WorkspaceTableColumnWidths } from "../../../shared/types/savedView";
 import type { WorkspaceFieldDefinition } from "../../../shared/types/workspaceField";
 import type { ReferenceWorkspaceGroup } from "../application/referenceWorkspaceModel";
 import type { WorkspaceRowState } from "../application/workspaceRowState";
@@ -6,7 +7,7 @@ import { WorkspaceCellDetailMenu } from "./WorkspaceCellDetailMenu";
 import { WorkspaceEditableCell } from "./WorkspaceEditableCell";
 import { WorkspaceTableHeader } from "./WorkspaceTableHeader";
 import { buildWorkspaceVirtualItems, selectWorkspaceVirtualItems, TABLE_BODY_VIEWPORT_HEIGHT } from "./workspaceVirtualItems";
-import { ACTIONS_COLUMN_WIDTH, INDEX_COLUMN_WIDTH, ITEM_DETAILS_COLUMN_WIDTH, SELECT_COLUMN_WIDTH, cellWidth } from "./workspaceTableLayout";
+import { INDEX_COLUMN_WIDTH, SELECT_COLUMN_WIDTH, cellWidth } from "./workspaceTableLayout";
 
 type WorkspaceTableProps = {
   allSelected: boolean;
@@ -16,6 +17,7 @@ type WorkspaceTableProps = {
   fieldOrder: string[];
   recordColumnWidths: Record<string, number>;
   itemColumnWidths: Record<string, number>;
+  tableColumnWidths: WorkspaceTableColumnWidths;
   selectedIdSet: Set<string>;
   onToggleSelected: (invoiceDocumentId: string) => void;
   onToggleAll: () => void;
@@ -27,6 +29,7 @@ type WorkspaceTableProps = {
   onToggleGroup: (groupId: string) => void;
   onRecordColumnWidthsChange: (nextWidths: Record<string, number>) => void;
   onItemColumnWidthsChange: (nextWidths: Record<string, number>) => void;
+  onTableColumnWidthsChange: (nextWidths: WorkspaceTableColumnWidths) => void;
 };
 
 function orderedFields(fieldsById: Map<string, WorkspaceFieldDefinition>, fieldOrder: string[]) {
@@ -90,6 +93,7 @@ const WorkspaceTableRow = memo(function WorkspaceTableRow(
     visibleFields: WorkspaceFieldDefinition[];
     recordColumnWidths: Record<string, number>;
     itemColumnWidths: Record<string, number>;
+    tableColumnWidths: WorkspaceTableColumnWidths;
     isSelected: boolean;
   },
 ) {
@@ -117,7 +121,7 @@ const WorkspaceTableRow = memo(function WorkspaceTableRow(
           />
         </div>
       ))}
-      <div className="table-cell table-cell--item-details" style={cellWidth(ITEM_DETAILS_COLUMN_WIDTH)}>
+      <div className="table-cell table-cell--item-details" style={cellWidth(props.tableColumnWidths.itemDetails)}>
         {itemDetails.length > 0 ? (
           <WorkspaceCellDetailMenu
             buttonLabel="查看商品"
@@ -130,7 +134,7 @@ const WorkspaceTableRow = memo(function WorkspaceTableRow(
           <span className="editable-cell__placeholder">无</span>
         )}
       </div>
-      <div className="table-cell table-cell--actions" style={cellWidth(ACTIONS_COLUMN_WIDTH)}>
+      <div className="table-cell table-cell--actions" style={cellWidth(props.tableColumnWidths.actions)}>
         <RowActions
           rowId={props.row.id}
           onOpenDetails={props.onOpenDetails}
@@ -170,8 +174,10 @@ export function WorkspaceTable(props: WorkspaceTableProps) {
             allSelected={props.allSelected}
             visibleFields={visibleFields}
             recordColumnWidths={props.recordColumnWidths}
+            tableColumnWidths={props.tableColumnWidths}
             onToggleAll={props.onToggleAll}
             onRecordColumnWidthsChange={props.onRecordColumnWidthsChange}
+            onTableColumnWidthsChange={props.onTableColumnWidthsChange}
           />
 
           <div className="task-table-body__content">
@@ -188,6 +194,7 @@ export function WorkspaceTable(props: WorkspaceTableProps) {
                         visibleFields={visibleFields}
                         recordColumnWidths={props.recordColumnWidths}
                         itemColumnWidths={props.itemColumnWidths}
+                        tableColumnWidths={props.tableColumnWidths}
                         isSelected={props.selectedIdSet.has(item.row.id)}
                         onToggleSelected={props.onToggleSelected}
                         onOpenDetails={props.onOpenDetails}

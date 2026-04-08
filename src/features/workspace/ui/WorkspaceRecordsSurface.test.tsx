@@ -13,6 +13,7 @@ describe("WorkspaceRecordsSurface", () => {
         fieldOrder={[]}
         recordColumnWidths={{}}
         itemColumnWidths={{}}
+        tableColumnWidths={{ itemDetails: 120, actions: 286 }}
         selectedIdSet={new Set()}
         dragActive={false}
         importLabel="文件会直接进入当前记录工作区。"
@@ -32,6 +33,7 @@ describe("WorkspaceRecordsSurface", () => {
         onToggleGroup={() => {}}
         onRecordColumnWidthsChange={() => {}}
         onItemColumnWidthsChange={() => {}}
+        onTableColumnWidthsChange={() => {}}
         onDragOver={() => {}}
         onDragLeave={() => {}}
         onDrop={() => {}}

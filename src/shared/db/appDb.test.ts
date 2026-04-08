@@ -121,6 +121,7 @@ describe("appDb", () => {
         fieldOrder: ["invoiceNumber", "remark", "annotation"],
         recordColumnWidths: { invoiceNumber: 160, remark: 220 },
         itemColumnWidths: { name: 240, amount: 120 },
+        tableColumnWidths: { itemDetails: 148, actions: 258 },
       },
       visibleColumns: ["invoiceNumber", "remark", "annotation"],
       createdAt: "2026-03-30T00:00:00.000Z",
@@ -131,6 +132,7 @@ describe("appDb", () => {
         fieldOrder: ["invoiceNumber", "remark", "annotation"],
         recordColumnWidths: { invoiceNumber: 160, remark: 220 },
         itemColumnWidths: { name: 240, amount: 120 },
+        tableColumnWidths: { itemDetails: 148, actions: 258 },
       }),
     });
     await appDb.savedViews.add(workspaceView);

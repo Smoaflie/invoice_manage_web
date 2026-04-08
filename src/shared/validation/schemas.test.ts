@@ -25,6 +25,7 @@ describe("schemas", () => {
         fieldOrder: ["invoiceNumber", "buyerName"],
         recordColumnWidths: { invoiceNumber: 168, buyerName: 192 },
         itemColumnWidths: { name: 220, amount: 120 },
+        tableColumnWidths: { itemDetails: 144, actions: 262 },
       },
       visibleColumns: ["invoiceNumber", "buyerName"],
       createdAt: "2026-04-04T00:00:00.000Z",
@@ -42,6 +43,7 @@ describe("schemas", () => {
       }),
       recordColumnWidths: { invoiceNumber: 168, buyerName: 192 },
       itemColumnWidths: { name: 220, amount: 120 },
+      tableColumnWidths: { itemDetails: 144, actions: 262 },
     });
   });
 

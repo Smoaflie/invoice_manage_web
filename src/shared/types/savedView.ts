@@ -30,6 +30,11 @@ export type WorkspaceSorter = {
   direction: ViewSortDirection;
 };
 
+export type WorkspaceTableColumnWidths = {
+  itemDetails: number;
+  actions: number;
+};
+
 export type WorkspaceSavedViewQuery = {
   scope: "workspace";
   view?: "records" | "kanban" | "analytics" | "dashboard";
@@ -43,6 +48,7 @@ export type WorkspaceSavedViewQuery = {
   fieldOrder: string[];
   recordColumnWidths?: Record<string, number>;
   itemColumnWidths?: Record<string, number>;
+  tableColumnWidths?: Partial<WorkspaceTableColumnWidths>;
 };
 
 export type SavedViewQuery = InvoiceSavedViewQuery | FileSavedViewQuery | WorkspaceSavedViewQuery;

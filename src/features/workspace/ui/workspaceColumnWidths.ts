@@ -50,11 +50,19 @@ export function buildAutoColumnWidthMap<TKey extends string>(
   );
 }
 
-export function resizeColumnPair(input: { leftWidth: number; rightWidth: number; delta: number; minWidth?: number }) {
-  const minWidth = input.minWidth ?? MIN_COLUMN_WIDTH;
+export function resizeColumnPair(input: {
+  leftWidth: number;
+  rightWidth: number;
+  delta: number;
+  minWidth?: number;
+  leftMinWidth?: number;
+  rightMinWidth?: number;
+}) {
+  const leftMinWidth = input.leftMinWidth ?? input.minWidth ?? MIN_COLUMN_WIDTH;
+  const rightMinWidth = input.rightMinWidth ?? input.minWidth ?? MIN_COLUMN_WIDTH;
   const totalWidth = input.leftWidth + input.rightWidth;
-  const maxLeftWidth = totalWidth - minWidth;
-  const nextLeftWidth = Math.min(Math.max(input.leftWidth + input.delta, minWidth), maxLeftWidth);
+  const maxLeftWidth = totalWidth - rightMinWidth;
+  const nextLeftWidth = Math.min(Math.max(input.leftWidth + input.delta, leftMinWidth), maxLeftWidth);
   return {
     leftWidth: Math.round(nextLeftWidth),
     rightWidth: Math.round(totalWidth - nextLeftWidth),

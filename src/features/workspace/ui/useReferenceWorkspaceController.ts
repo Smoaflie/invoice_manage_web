@@ -92,7 +92,7 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
   const queryConditionRoot = savedViewState.query.conditionRoot ?? createEmptyConditionGroup();
   const activeFilterCount = queryConditionRoot.children.length;
   const orderedVisibleFieldIds = useMemo(() => queryFieldOrder.filter((id) => visibleFieldIdSet.has(id)), [queryFieldOrder, visibleFieldIdSet]);
-  const { recordColumnWidths, itemColumnWidths, setRecordColumnWidths, setItemColumnWidths } = useWorkspaceViewColumnWidths({
+  const { recordColumnWidths, itemColumnWidths, tableColumnWidths, setRecordColumnWidths, setItemColumnWidths, setTableColumnWidths } = useWorkspaceViewColumnWidths({
     fields,
     rowStates,
     invoiceDocuments: props.invoiceDocuments,
@@ -222,6 +222,7 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
     activeFilterCount,
     recordColumnWidths,
     itemColumnWidths,
+    tableColumnWidths,
     dashboardDocument,
     filterGroups,
     resolveFilterGroup,
@@ -250,6 +251,7 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
     setDragActive,
     setRecordColumnWidths,
     setItemColumnWidths,
+    setTableColumnWidths,
     handleToggleSelected,
     handleToggleAll,
     handleDeleteSelected: () => void props.onDelete([...selectedIdSet]),

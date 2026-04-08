@@ -103,6 +103,7 @@
 .table-cell--head {
   position: relative;
   padding-right: 16px;
+  overflow: visible;
   color: #6b7280;
 }
 
@@ -127,12 +128,13 @@
 
 .table-column-resize-handle {
   position: absolute;
-  top: 4px;
+  top: 6px;
   right: -6px;
-  width: 12px;
-  height: calc(100% - 8px);
+  width: 14px;
+  height: calc(100% - 12px);
   padding: 0;
   border: 0;
+  border-radius: 999px;
   background: transparent;
   box-shadow: none;
   cursor: col-resize;
@@ -140,16 +142,21 @@
 
 .table-column-resize-handle::before {
   content: "";
-  display: block;
-  width: 1px;
-  height: 100%;
-  margin: 0 auto;
-  background: rgba(148, 163, 184, 0.5);
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 50%;
+  width: 2px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  background: rgba(100, 116, 139, 0.75);
+  transition: background-color 0.16s ease, box-shadow 0.16s ease;
 }
 
 .table-column-resize-handle:hover::before,
 .table-column-resize-handle:focus::before {
-  background: rgba(148, 163, 184, 0.9);
+  background: #2563eb;
+  box-shadow: 0 0 0 1px rgba(219, 234, 254, 0.9);
 }
 
 .table-column-resize-guide {
@@ -418,6 +425,8 @@
 
 .task-table-actions {
   gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .task-table-actions .workspace-row-actions__button {

@@ -147,6 +147,7 @@ describe("useSavedViewState", () => {
         fieldOrder: ["invoiceNumber", "remark", "annotation"],
         recordColumnWidths: { invoiceNumber: 160, remark: 220 },
         itemColumnWidths: { name: 240, amount: 120 },
+        tableColumnWidths: { itemDetails: 148, actions: 258 },
       }));
       result.current.setVisibleColumns(["invoiceNumber", "remark", "annotation"]);
     });
@@ -166,6 +167,7 @@ describe("useSavedViewState", () => {
         fieldOrder: ["invoiceNumber", "remark", "annotation"],
         recordColumnWidths: { invoiceNumber: 160, remark: 220 },
         itemColumnWidths: { name: 240, amount: 120 },
+        tableColumnWidths: { itemDetails: 148, actions: 258 },
       }),
       visibleColumns: ["invoiceNumber", "remark", "annotation"],
     });

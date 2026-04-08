@@ -2,7 +2,10 @@ import { useState, type MouseEvent as ReactMouseEvent } from "react";
 import { resizeColumnPair } from "./workspaceColumnWidths";
 
 type UseWorkspaceColumnResizeInput = {
-  getWidths: (leftKey: string, rightKey: string) => { leftWidth: number; rightWidth: number } | null;
+  getWidths: (
+    leftKey: string,
+    rightKey: string,
+  ) => { leftWidth: number; rightWidth: number; leftMinWidth?: number; rightMinWidth?: number } | null;
   onCommit: (leftKey: string, rightKey: string, widths: { leftWidth: number; rightWidth: number }) => void;
 };
 

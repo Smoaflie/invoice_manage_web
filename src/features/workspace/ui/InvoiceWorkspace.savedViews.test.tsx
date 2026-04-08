@@ -562,6 +562,10 @@ describe("InvoiceWorkspace saved views", () => {
     fireEvent.mouseMove(window, { clientX: 220 });
     fireEvent.mouseUp(window, { clientX: 220 });
 
+    fireEvent.mouseDown(screen.getByRole("button", { name: "调整列宽 商品详情" }), { clientX: 420 });
+    fireEvent.mouseMove(window, { clientX: 450 });
+    fireEvent.mouseUp(window, { clientX: 450 });
+
     await user.click(screen.getByRole("button", { name: "查看商品" }));
 
     fireEvent.mouseDown(screen.getByRole("button", { name: "调整列宽 商品" }), { clientX: 320 });
@@ -577,6 +581,7 @@ describe("InvoiceWorkspace saved views", () => {
       expect.objectContaining({
         recordColumnWidths: expect.objectContaining({ invoiceNumber: expect.any(Number), buyerName: expect.any(Number) }),
         itemColumnWidths: expect.objectContaining({ name: expect.any(Number), type: expect.any(Number) }),
+        tableColumnWidths: expect.objectContaining({ itemDetails: expect.any(Number), actions: expect.any(Number) }),
       }),
     );
 

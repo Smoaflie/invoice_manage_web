@@ -1,10 +1,11 @@
 import { useCallback, useMemo } from "react";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
-import type { WorkspaceSavedViewQuery } from "../../../shared/types/savedView";
+import type { WorkspaceSavedViewQuery, WorkspaceTableColumnWidths } from "../../../shared/types/savedView";
 import type { WorkspaceFieldDefinition } from "../../../shared/types/workspaceField";
 import type { WorkspaceRowState } from "../application/workspaceRowState";
 import { buildAutoColumnWidthMap, toColumnSampleText } from "./workspaceColumnWidths";
 import { WORKSPACE_ITEM_COLUMNS, type WorkspaceItemColumnKey } from "./workspaceItemColumns";
+import { resolveWorkspaceTableColumnWidths } from "./workspaceTableLayout";
 
 type UseWorkspaceViewColumnWidthsInput = {
   fields: WorkspaceFieldDefinition[];
@@ -64,6 +65,11 @@ export function useWorkspaceViewColumnWidths(input: UseWorkspaceViewColumnWidths
     [computedItemColumnWidths, input.query.itemColumnWidths],
   );
 
+  const tableColumnWidths = useMemo(
+    () => resolveWorkspaceTableColumnWidths(input.query.tableColumnWidths),
+    [input.query.tableColumnWidths],
+  );
+
   const setRecordColumnWidths = useCallback(
     (nextRecordColumnWidths: Record<string, number>) =>
       input.setQuery((current) => ({ ...current, recordColumnWidths: nextRecordColumnWidths })),
@@ -76,10 +82,18 @@ export function useWorkspaceViewColumnWidths(input: UseWorkspaceViewColumnWidths
     [input],
   );
 
+  const setTableColumnWidths = useCallback(
+    (nextTableColumnWidths: WorkspaceTableColumnWidths) =>
+      input.setQuery((current) => ({ ...current, tableColumnWidths: nextTableColumnWidths })),
+    [input],
+  );
+
   return {
     recordColumnWidths,
     itemColumnWidths,
+    tableColumnWidths,
     setRecordColumnWidths,
     setItemColumnWidths,
+    setTableColumnWidths,
   };
 }

@@ -57,6 +57,7 @@ export function useWorkspaceViewDrafts(input: UseWorkspaceViewDraftsInput) {
   );
   const activeDraftKey = useMemo(() => workspaceViewDraftKey(activeViewId), [activeViewId]);
   const [loadedDraftKey, setLoadedDraftKey] = useState("");
+  const [persistencePaused, setPersistencePaused] = useState(false);
   const applyingDraftRef = useRef(false);
   const currentState = useMemo(
     () =>
@@ -110,7 +111,17 @@ export function useWorkspaceViewDrafts(input: UseWorkspaceViewDraftsInput) {
   const hasViewDraft = loadedDraftKey === activeDraftKey && !workspaceViewDraftStateEquals(currentState, baseState);
 
   useEffect(() => {
-    if (!ready || input.fields.length === 0 || loadedDraftKey !== activeDraftKey || applyingDraftRef.current) {
+    if (!persistencePaused || !workspaceViewDraftStateEquals(currentState, baseState)) {
+      return;
+    }
+
+    applyingDraftRef.current = false;
+    setLoadedDraftKey(activeDraftKey);
+    setPersistencePaused(false);
+  }, [activeDraftKey, baseState, currentState, persistencePaused]);
+
+  useEffect(() => {
+    if (!ready || input.fields.length === 0 || loadedDraftKey !== activeDraftKey || applyingDraftRef.current || persistencePaused) {
       return;
     }
 
@@ -124,14 +135,25 @@ export function useWorkspaceViewDrafts(input: UseWorkspaceViewDraftsInput) {
     }, DRAFT_PERSIST_DELAY_MS);
 
     return () => globalThis.clearTimeout(timeoutId);
-  }, [activeDraftKey, activeViewId, currentState, hasViewDraft, input.fields.length, loadedDraftKey, ready]);
+  }, [activeDraftKey, activeViewId, currentState, hasViewDraft, input.fields.length, loadedDraftKey, persistencePaused, ready]);
 
   const handleSaveViewDraft = useCallback(async () => {
     const draftViewId = activeViewId;
-    await saveCurrentView();
-    await clearWorkspaceViewDraft(draftViewId);
-    input.setWorkspaceMessage("已保存当前视图。");
-  }, [activeViewId, input.setWorkspaceMessage, saveCurrentView]);
+    applyingDraftRef.current = true;
+    setLoadedDraftKey("");
+    setPersistencePaused(true);
+
+    try {
+      await saveCurrentView();
+      await clearWorkspaceViewDraft(draftViewId);
+      input.setWorkspaceMessage("已保存当前视图。");
+    } catch (error) {
+      applyingDraftRef.current = false;
+      setLoadedDraftKey(activeDraftKey);
+      setPersistencePaused(false);
+      throw error;
+    }
+  }, [activeDraftKey, activeViewId, input.setWorkspaceMessage, saveCurrentView]);
 
   const handleDiscardViewDraft = useCallback(async () => {
     const clonedBaseState = cloneWorkspaceViewDraftState(baseState);
