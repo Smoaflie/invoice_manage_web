@@ -342,4 +342,28 @@ describe("InvoiceWorkspace interactions", () => {
     await waitFor(() => expect(onRefresh).toHaveBeenCalled());
     expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:workspace-export");
   });
+
+  test("confirms conflicting toolbar imports before continuing with flagged records", async () => {
+    const user = userEvent.setup();
+    const onRefresh = vi.fn();
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    mockedDeps.importDataMock
+      .mockRejectedValueOnce(Object.assign(new Error("conflict"), { name: "ImportConflictError", conflicts: [{ status: "same_number_diff_hash" }] }))
+      .mockResolvedValueOnce({ importedInvoiceDocuments: 1, conflictedInvoiceDocuments: 1 });
+
+    renderInvoiceWorkspace({ onRefresh });
+
+    const input = document.querySelector('input[type="file"][accept*=".json"]') as HTMLInputElement | null;
+    expect(input).toBeTruthy();
+
+    await user.click(await screen.findByRole("button", { name: "导入数据" }));
+
+    const file = new File([JSON.stringify({ invoiceDocuments: [{ id: "doc-2" }] })], "transfer.json", { type: "application/json" });
+    Object.defineProperty(input as HTMLInputElement, "files", { value: [file], configurable: true });
+    fireEvent.change(input as HTMLInputElement);
+
+    await waitFor(() => expect(confirmSpy).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mockedDeps.importDataMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(onRefresh).toHaveBeenCalledTimes(1));
+  });
 });

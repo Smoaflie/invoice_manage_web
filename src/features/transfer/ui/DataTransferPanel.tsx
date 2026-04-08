@@ -1,4 +1,5 @@
 import { useRef, useState, type ChangeEvent } from "react";
+import { buildImportResultMessage, confirmImportConflicts, isImportConflictError } from "../application/importConflictHandling";
 import { readFileAsText, triggerJsonDownload } from "../application/browserTransfer";
 import { exportData } from "../application/exportData";
 import { importData } from "../application/importData";
@@ -41,9 +42,24 @@ export function DataTransferPanel({ onImportComplete }: DataTransferPanelProps) 
 
     try {
       const parsedPayload = JSON.parse(await readFileAsText(file)) as unknown;
-      const result = await importData(parsedPayload);
+      let result;
+      try {
+        result = await importData(parsedPayload);
+      } catch (error) {
+        if (!isImportConflictError(error)) {
+          throw error;
+        }
+
+        if (!confirmImportConflicts(error.conflicts.length)) {
+          setMessage("已取消导入。");
+          return;
+        }
+
+        result = await importData(parsedPayload, { conflictMode: "continue_with_conflicts" });
+      }
+
       await onImportComplete?.();
-      setMessage(`已覆盖本地数据并导入 ${result.importedInvoiceDocuments} 条发票记录。`);
+      setMessage(buildImportResultMessage(result));
     } catch {
       setMessage("导入失败。");
     } finally {

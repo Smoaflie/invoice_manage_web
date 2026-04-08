@@ -12,7 +12,7 @@ export type BindingErrorType =
 
 export type ParseStatus = "idle" | "parsed" | "parse_failed" | "needs_reparse";
 
-export type ConflictStatus = "none" | "same_number_diff_hash";
+export type ConflictStatus = "none" | "same_number_diff_hash" | "same_hash_diff_invoice_data";
 
 export interface InvoiceDocumentItem {
   [key: string]: unknown;

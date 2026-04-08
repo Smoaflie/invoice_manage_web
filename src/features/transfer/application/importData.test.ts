@@ -14,14 +14,15 @@ describe("importData", () => {
     await appDb.delete();
   });
 
-  it("replaces local transfer tables and imports invoice documents without restoring file handles", async () => {
+  it("merges transfer data and preserves local file handles for matching invoice documents", async () => {
     await appDb.invoiceDocuments.add({
       ...buildTransferInvoiceDocument({
         id: "doc-old",
-        contentHash: "hash-old",
+        contentHash: "hash-shared",
         fileName: "old.pdf",
         fileSize: 1,
         invoiceNumber: "INV-OLD",
+        buyerName: "本地买方",
         createdAt: "2026-03-29T00:00:00.000Z",
         updatedAt: "2026-03-29T00:00:00.000Z",
         parseStatus: "parsed",
@@ -34,7 +35,16 @@ describe("importData", () => {
     await appDb.fileHandles.add({ key: "persisted-handle", handle: {} as FileSystemHandle });
 
     const result = await importData({
-      invoiceDocuments: [buildTransferInvoiceDocument()],
+      invoiceDocuments: [
+        buildTransferInvoiceDocument({
+          id: "doc-imported",
+          contentHash: "hash-shared",
+          fileName: "imported.pdf",
+          fileSize: 2,
+          invoiceNumber: "INV-OLD",
+          buyerName: "本地买方",
+        }),
+      ],
       invoiceAuditLogs: [],
       tagDefinitions: [],
       tagGroups: [],
@@ -48,22 +58,24 @@ describe("importData", () => {
       ],
     });
 
-    expect(result.importedInvoiceDocuments).toBe(1);
+    expect(result.importedInvoiceDocuments).toBe(0);
     expect(await appDb.invoiceDocuments.count()).toBe(1);
     expect(await appDb.filterGroups.count()).toBe(0);
     expect(await appDb.filterGroupRules.count()).toBe(0);
     expect(await appDb.savedViews.count()).toBe(0);
-    expect(await appDb.settings.count()).toBe(1);
+    expect(await appDb.settings.count()).toBe(2);
     expect(await appDb.settings.get("ocr.baiduApiKey")).toBeUndefined();
     expect(await appDb.settings.get("ocr.vendor")).toMatchObject({ value: "baidu" });
-    expect(await appDb.invoiceDocuments.get("doc-1")).toMatchObject({
-      handleRef: "",
-      bindingStatus: "unreadable",
-      bindingErrorType: "handle_missing",
-      remark: "",
+    expect(await appDb.settings.get("app.theme")).toMatchObject({ value: "dark" });
+    expect(await appDb.invoiceDocuments.get("doc-old")).toMatchObject({
+      handleRef: "persisted-handle",
+      bindingStatus: "readable",
+      bindingErrorType: null,
+      fileName: "old.pdf",
+      buyerName: "本地买方",
     });
-    expect(await appDb.invoiceDocuments.get("doc-old")).toBeUndefined();
-    expect(await appDb.fileHandles.count()).toBe(0);
+    expect(await appDb.invoiceDocuments.get("doc-imported")).toBeUndefined();
+    expect(await appDb.fileHandles.count()).toBe(1);
   });
 
   it("rejects malformed payloads before writing transfer data", async () => {
@@ -166,5 +178,117 @@ describe("importData", () => {
       remark: "",
       annotation: "历史批注",
     });
+  });
+
+  it("rejects conflicting invoice imports before writing any data", async () => {
+    await appDb.invoiceDocuments.add({
+      ...buildTransferInvoiceDocument({
+        id: "doc-existing",
+        contentHash: "hash-existing",
+        fileName: "existing.pdf",
+        invoiceNumber: "INV-001",
+        buyerName: "本地买方",
+      }),
+      handleRef: "handle-existing",
+      bindingStatus: "readable",
+      bindingErrorType: null,
+    });
+
+    await expect(
+      importData({
+        invoiceDocuments: [
+          buildTransferInvoiceDocument({
+            id: "doc-conflict",
+            contentHash: "hash-existing",
+            fileName: "incoming.pdf",
+            invoiceNumber: "INV-001",
+            buyerName: "导入买方",
+          }),
+        ],
+        invoiceAuditLogs: [],
+        tagDefinitions: [],
+        tagGroups: [],
+        tagGroupLinks: [],
+        filterGroups: [],
+        filterGroupRules: [],
+        savedViews: [],
+        settings: [],
+      }),
+    ).rejects.toMatchObject({
+      name: "ImportConflictError",
+    });
+
+    expect(await appDb.invoiceDocuments.count()).toBe(1);
+    expect(await appDb.invoiceDocuments.get("doc-existing")).toMatchObject({
+      buyerName: "本地买方",
+      conflictStatus: "none",
+      conflictMessage: "",
+    });
+  });
+
+  it("imports conflicting invoices as flagged records when continuing with conflicts", async () => {
+    await appDb.invoiceDocuments.add({
+      ...buildTransferInvoiceDocument({
+        id: "doc-existing",
+        contentHash: "hash-existing",
+        fileName: "existing.pdf",
+        invoiceNumber: "INV-001",
+        buyerName: "本地买方",
+      }),
+      handleRef: "handle-existing",
+      bindingStatus: "readable",
+      bindingErrorType: null,
+    });
+
+    const result = await importData(
+      {
+        invoiceDocuments: [
+          buildTransferInvoiceDocument({
+            id: "doc-hash-conflict",
+            contentHash: "hash-existing",
+            fileName: "same-hash.pdf",
+            invoiceNumber: "INV-001",
+            buyerName: "导入买方",
+          }),
+          buildTransferInvoiceDocument({
+            id: "doc-number-conflict",
+            contentHash: "hash-other",
+            fileName: "same-number.pdf",
+            invoiceNumber: "INV-001",
+            buyerName: "另一导入买方",
+          }),
+        ],
+        invoiceAuditLogs: [],
+        tagDefinitions: [],
+        tagGroups: [],
+        tagGroupLinks: [],
+        filterGroups: [],
+        filterGroupRules: [],
+        savedViews: [],
+        settings: [],
+      },
+      { conflictMode: "continue_with_conflicts" },
+    );
+
+    expect(result.importedInvoiceDocuments).toBe(2);
+    expect(result.conflictedInvoiceDocuments).toBe(2);
+    expect(await appDb.invoiceDocuments.count()).toBe(3);
+
+    const importedRows = (await appDb.invoiceDocuments.toArray()).filter((row) => row.id !== "doc-existing");
+    expect(importedRows).toHaveLength(2);
+    expect(importedRows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          fileName: "same-hash.pdf",
+          conflictStatus: "same_hash_diff_invoice_data",
+          conflictMessage: expect.stringContaining("existing.pdf"),
+        }),
+        expect.objectContaining({
+          fileName: "same-number.pdf",
+          conflictStatus: "same_number_diff_hash",
+          conflictMessage: expect.stringContaining("hash-existing"),
+        }),
+      ]),
+    );
   });
 });

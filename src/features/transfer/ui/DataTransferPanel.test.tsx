@@ -87,6 +87,7 @@ describe("DataTransferPanel", () => {
     const onImportComplete = vi.fn();
     importDataMock.mockResolvedValue({
       importedInvoiceDocuments: 1,
+      conflictedInvoiceDocuments: 0,
     });
 
     render(<DataTransferPanel onImportComplete={onImportComplete} />);
@@ -108,7 +109,7 @@ describe("DataTransferPanel", () => {
     await waitFor(() => expect(importDataMock).toHaveBeenCalledTimes(1));
     expect(importDataMock).toHaveBeenCalledWith(payload);
     expect(onImportComplete).toHaveBeenCalledTimes(1);
-    expect(screen.getByText("已覆盖本地数据并导入 1 条发票记录。")).toBeInTheDocument();
+    expect(screen.getByText("已导入 1 条发票记录。")).toBeInTheDocument();
   });
 
   it("shows an error when import fails", async () => {
@@ -128,5 +129,54 @@ describe("DataTransferPanel", () => {
 
     await waitFor(() => expect(importDataMock).toHaveBeenCalledTimes(1));
     expect(screen.getByText("导入失败。")).toBeInTheDocument();
+  });
+
+  it("asks for confirmation when conflicts are detected and imports flagged records after confirmation", async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    importDataMock
+      .mockRejectedValueOnce(Object.assign(new Error("conflict"), { name: "ImportConflictError", conflicts: [{ status: "same_number_diff_hash" }] }))
+      .mockResolvedValueOnce({
+        importedInvoiceDocuments: 1,
+        conflictedInvoiceDocuments: 1,
+      });
+
+    render(<DataTransferPanel />);
+
+    await user.click(screen.getByRole("button", { name: "导入 JSON" }));
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement | null;
+    expect(input).toBeTruthy();
+    const payload = { invoiceDocuments: [{ id: "doc-1" }], settings: [] };
+    const file = new File([JSON.stringify(payload)], "transfer.json", { type: "application/json" });
+    setInputFiles(input as HTMLInputElement, [file]);
+    fireEvent.change(input as HTMLInputElement);
+
+    await waitFor(() => expect(confirmSpy).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(importDataMock).toHaveBeenCalledTimes(2));
+    expect(screen.getByText("已导入 1 条发票记录，其中 1 条已标记为冲突。")).toBeInTheDocument();
+  });
+
+  it("cancels conflicting imports when the user declines confirmation", async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    importDataMock.mockRejectedValueOnce(
+      Object.assign(new Error("conflict"), { name: "ImportConflictError", conflicts: [{ status: "same_number_diff_hash" }] }),
+    );
+
+    render(<DataTransferPanel />);
+
+    await user.click(screen.getByRole("button", { name: "导入 JSON" }));
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement | null;
+    expect(input).toBeTruthy();
+    const payload = { invoiceDocuments: [{ id: "doc-1" }], settings: [] };
+    const file = new File([JSON.stringify(payload)], "transfer.json", { type: "application/json" });
+    setInputFiles(input as HTMLInputElement, [file]);
+    fireEvent.change(input as HTMLInputElement);
+
+    await waitFor(() => expect(confirmSpy).toHaveBeenCalledTimes(1));
+    expect(importDataMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("已取消导入。")).toBeInTheDocument();
   });
 });

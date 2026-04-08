@@ -36,7 +36,7 @@ export const transferFileEntrySchema = fileEntrySchema.omit({
 });
 
 export const parseStatusSchema = z.enum(["idle", "parsed", "parse_failed", "needs_reparse"]);
-export const conflictStatusSchema = z.enum(["none", "same_number_diff_hash"]);
+export const conflictStatusSchema = z.enum(["none", "same_number_diff_hash", "same_hash_diff_invoice_data"]);
 export const collaborationStatusSchema = z.enum([
   "local_only",
   "matched_in_snapshot",

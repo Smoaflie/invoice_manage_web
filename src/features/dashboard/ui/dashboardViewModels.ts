@@ -60,6 +60,8 @@ export function conflictStatusLabel(status: InvoiceDocument["conflictStatus"]) {
       return "无冲突";
     case "same_number_diff_hash":
       return "同号异文件";
+    case "same_hash_diff_invoice_data":
+      return "同文件异信息";
   }
 }
 

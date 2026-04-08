@@ -9,6 +9,7 @@ import type { SettingRecord } from "../../../shared/types/settings";
 import type { TagDefinition, TagGroup, TagGroupLink } from "../../../shared/types/tagDefinition";
 import { legacyTransferDataSchema, transferDataSchema } from "../../../shared/validation/schemas";
 import { migrateLegacyTables } from "../../documents/application/migrateLegacyTables";
+import { buildImportPlan, type ImportConflict } from "./importDataConflicts";
 
 const WEB_ONLY_OCR_SECRET_KEYS = new Set(["ocr.baiduApiKey", "ocr.baiduSecretKey", "ocr.tencentSecretId", "ocr.tencentSecretKey"]);
 
@@ -26,6 +27,17 @@ export type ImportDataPayload = {
 
 export type ImportDataResult = {
   importedInvoiceDocuments: number;
+  conflictedInvoiceDocuments: number;
+};
+
+export type ImportConflictMode = "reject" | "continue_with_conflicts";
+export type ImportDataOptions = {
+  conflictMode?: ImportConflictMode;
+};
+
+type ImportConflictError = Error & {
+  name: "ImportConflictError";
+  conflicts: ImportConflict[];
 };
 
 function sanitizeImportedPayload(payload: unknown) {
@@ -47,17 +59,6 @@ function sanitizeImportedPayload(payload: unknown) {
     ...(payload as Record<string, unknown>),
     settings,
     invoiceDocuments,
-  };
-}
-
-function normalizeImportedInvoiceDocument(
-  entry: Omit<InvoiceDocument, "handleRef" | "bindingStatus" | "bindingErrorType">,
-): InvoiceDocument {
-  return {
-    ...entry,
-    handleRef: "",
-    bindingStatus: "unreadable",
-    bindingErrorType: "handle_missing",
   };
 }
 
@@ -109,11 +110,40 @@ async function parseTransferPayload(payload: unknown): Promise<{
   return normalizeLegacyPayload(sanitizedPayload);
 }
 
-export async function importData(payload: unknown): Promise<ImportDataResult> {
-  const parsedPayload = await parseTransferPayload(payload);
+function createImportConflictError(conflicts: ImportConflict[]): ImportConflictError {
+  const error = new Error("检测到导入冲突，请确认后继续导入。") as ImportConflictError;
+  error.name = "ImportConflictError";
+  error.conflicts = conflicts;
+  return error;
+}
 
-  const invoiceDocuments = parsedPayload.invoiceDocuments.map(normalizeImportedInvoiceDocument);
-  const invoiceAuditLogs = parsedPayload.invoiceAuditLogs;
+function remapImportedAuditLogs(invoiceAuditLogs: InvoiceAuditLog[], sourceIdToImportedId: Map<string, string>, importedInvoiceDocumentIds: Set<string>) {
+  return invoiceAuditLogs.flatMap((auditLog) => {
+    const importedInvoiceDocumentId = sourceIdToImportedId.get(auditLog.invoiceDocumentId);
+    if (!importedInvoiceDocumentId || !importedInvoiceDocumentIds.has(importedInvoiceDocumentId)) {
+      return [];
+    }
+
+    return [{
+      ...auditLog,
+      id: globalThis.crypto.randomUUID(),
+      invoiceDocumentId: importedInvoiceDocumentId,
+    }];
+  });
+}
+
+export async function importData(payload: unknown, options: ImportDataOptions = {}): Promise<ImportDataResult> {
+  const parsedPayload = await parseTransferPayload(payload);
+  const existingInvoiceDocuments = await appDb.invoiceDocuments.toArray();
+  const importPlan = buildImportPlan(parsedPayload.invoiceDocuments, existingInvoiceDocuments);
+  const conflictMode = options.conflictMode ?? "reject";
+  if (importPlan.conflicts.length > 0 && conflictMode !== "continue_with_conflicts") {
+    throw createImportConflictError(importPlan.conflicts);
+  }
+
+  const invoiceDocuments = importPlan.invoiceDocuments;
+  const importedInvoiceDocumentIds = new Set(invoiceDocuments.map((document) => document.id));
+  const invoiceAuditLogs = remapImportedAuditLogs(parsedPayload.invoiceAuditLogs, importPlan.sourceIdToImportedId, importedInvoiceDocumentIds);
   const tagDefinitions = parsedPayload.tagDefinitions;
   const tagGroups = parsedPayload.tagGroups;
   const tagGroupLinks = parsedPayload.tagGroupLinks;
@@ -134,22 +164,8 @@ export async function importData(payload: unknown): Promise<ImportDataResult> {
       appDb.filterGroupRules,
       appDb.savedViews,
       appDb.settings,
-      appDb.fileHandles,
     ],
     async () => {
-      await Promise.all([
-        appDb.invoiceDocuments.clear(),
-        appDb.invoiceAuditLogs.clear(),
-        appDb.tagDefinitions.clear(),
-        appDb.tagGroups.clear(),
-        appDb.tagGroupLinks.clear(),
-        appDb.filterGroups.clear(),
-        appDb.filterGroupRules.clear(),
-        appDb.savedViews.clear(),
-        appDb.settings.clear(),
-        appDb.fileHandles.clear(),
-      ]);
-
       if (invoiceDocuments.length > 0) {
         await appDb.invoiceDocuments.bulkAdd(invoiceDocuments);
       }
@@ -159,36 +175,37 @@ export async function importData(payload: unknown): Promise<ImportDataResult> {
       }
 
       if (tagDefinitions.length > 0) {
-        await appDb.tagDefinitions.bulkAdd(tagDefinitions);
+        await appDb.tagDefinitions.bulkPut(tagDefinitions);
       }
 
       if (tagGroups.length > 0) {
-        await appDb.tagGroups.bulkAdd(tagGroups);
+        await appDb.tagGroups.bulkPut(tagGroups);
       }
 
       if (tagGroupLinks.length > 0) {
-        await appDb.tagGroupLinks.bulkAdd(tagGroupLinks);
+        await appDb.tagGroupLinks.bulkPut(tagGroupLinks);
       }
 
       if (filterGroups.length > 0) {
-        await appDb.filterGroups.bulkAdd(filterGroups);
+        await appDb.filterGroups.bulkPut(filterGroups);
       }
 
       if (filterGroupRules.length > 0) {
-        await appDb.filterGroupRules.bulkAdd(filterGroupRules);
+        await appDb.filterGroupRules.bulkPut(filterGroupRules);
       }
 
       if (savedViews.length > 0) {
-        await appDb.savedViews.bulkAdd(savedViews);
+        await appDb.savedViews.bulkPut(savedViews);
       }
 
       if (settings.length > 0) {
-        await appDb.settings.bulkAdd(settings);
+        await appDb.settings.bulkPut(settings);
       }
     },
   );
 
   return {
     importedInvoiceDocuments: invoiceDocuments.length,
+    conflictedInvoiceDocuments: importPlan.conflictedInvoiceDocuments,
   };
 }

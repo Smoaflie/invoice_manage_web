@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { persistFileHandle } from "../../../shared/fs/fileHandles";
 import { importFiles } from "../../files/application/importFiles";
+import { buildImportResultMessage, confirmImportConflicts, isImportConflictError } from "../../transfer/application/importConflictHandling";
 import { exportData } from "../../transfer/application/exportData";
 import { importData } from "../../transfer/application/importData";
 import { readFileAsText, triggerJsonDownload } from "../../transfer/application/browserTransfer";
@@ -39,9 +40,24 @@ export function useWorkspaceTransferActions(input: UseWorkspaceTransferActionsIn
   const handleImportDataFile = useCallback(async (file: File) => {
     try {
       const parsedPayload = JSON.parse(await readFileAsText(file)) as unknown;
-      const result = await importData(parsedPayload);
+      let result;
+      try {
+        result = await importData(parsedPayload);
+      } catch (error) {
+        if (!isImportConflictError(error)) {
+          throw error;
+        }
+
+        if (!confirmImportConflicts(error.conflicts.length)) {
+          input.setWorkspaceMessage("已取消导入。");
+          return;
+        }
+
+        result = await importData(parsedPayload, { conflictMode: "continue_with_conflicts" });
+      }
+
       await input.onRefresh();
-      input.setWorkspaceMessage(`已覆盖本地数据并导入 ${result.importedInvoiceDocuments} 条发票记录。`);
+      input.setWorkspaceMessage(buildImportResultMessage(result));
     } catch (error) {
       input.setWorkspaceMessage(error instanceof Error ? error.message : "导入数据失败。");
     }
