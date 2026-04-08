@@ -57,6 +57,7 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
     savedViewState,
     setWorkspaceMessage,
   });
+  useEffect(() => { setWorkspaceMessage((current) => (current ? "" : current)); }, [props.message]);
   useEffect(() => {
     if (!savedViewState.ready || fields.length === 0) {
       return;
@@ -65,7 +66,6 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
     if (!sameStringArray(savedViewState.visibleColumns, nextVisibleFieldIds)) {
       savedViewState.setVisibleColumns(nextVisibleFieldIds);
     }
-
     const nextFieldOrder = mergeFieldOrder(fields, savedViewState.query.fieldOrder ?? []);
     if (!sameStringArray(savedViewState.query.fieldOrder ?? [], nextFieldOrder)) {
       savedViewState.setQuery((current) => ({ ...current, fieldOrder: nextFieldOrder }));
@@ -128,7 +128,6 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
     if (!firstDocument) {
       return [];
     }
-
     return [...new Set(firstDocument.tags)].filter((tag) => restDocuments.every((document) => document.tags.includes(tag)));
   }, [selectedDocuments]);
   const { handleCreateSavedView, handleRenameSavedView, handleDuplicateSavedView, handleDeleteSavedView } = useWorkspaceSavedViewActions(
