@@ -6,6 +6,10 @@ function hasBaiduError(body: unknown) {
   return typeof body === "object" && body !== null && ("error_code" in body || "error_msg" in body);
 }
 
+function hasAccessToken(body: unknown): body is { access_token: string } {
+  return typeof body === "object" && body !== null && "access_token" in body && typeof body.access_token === "string" && body.access_token.length > 0;
+}
+
 export async function requestBaiduAccessToken(
   apiKey: string,
   secretKey: string,
@@ -30,7 +34,7 @@ export async function requestBaiduAccessToken(
     throw new Error(parseBaiduError({ status: response.status, body }));
   }
 
-  if (typeof body?.access_token !== "string" || body.access_token.length === 0) {
+  if (!hasAccessToken(body)) {
     throw new Error("百度 OCR 鉴权失败，未返回 access_token。");
   }
 

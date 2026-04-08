@@ -15,7 +15,6 @@ export function useWorkspaceAuxiliaryDocuments() {
   const persistDashboardDocument = useCallback(async (document: DashboardDocument) => {
     await saveDashboardDocument(document);
     setDashboardDocument(document);
-    return document;
   }, []);
 
   useEffect(() => {

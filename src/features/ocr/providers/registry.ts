@@ -1,4 +1,4 @@
-import type { SettingsKey } from "../../../shared/types/settings";
+import type { OcrCredentialSettingKey } from "../../../shared/types/settings";
 import { baiduProvider } from "./baidu/provider";
 import { tencentProvider } from "./tencent/provider";
 import type { OcrProvider, OcrProviderId } from "./types";
@@ -26,6 +26,6 @@ export function getOcrProviderOptions() {
   }));
 }
 
-export function getAllOcrProviderSettingKeys(): SettingsKey[] {
+export function getAllOcrProviderSettingKeys(): OcrCredentialSettingKey[] {
   return OCR_PROVIDERS.flatMap((provider) => provider.getSettingsFields().map((field) => field.settingKey));
 }

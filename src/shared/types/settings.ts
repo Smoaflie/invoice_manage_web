@@ -35,6 +35,16 @@ export interface SettingsValueMap {
 
 export type SettingsValue<K extends SettingsKey = SettingsKey> = SettingsValueMap[K];
 
+export type StringLikeSettingsKey = {
+  [K in SettingsKey]: SettingsValueMap[K] extends string | null ? K : never;
+}[SettingsKey];
+
+export type OcrCredentialSettingKey =
+  | "ocr.baiduApiKey"
+  | "ocr.baiduSecretKey"
+  | "ocr.tencentSecretId"
+  | "ocr.tencentSecretKey";
+
 type SettingRecordMap = {
   [K in SettingsKey]: {
     key: K;

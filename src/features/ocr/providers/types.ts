@@ -1,4 +1,4 @@
-import type { SettingsKey } from "../../../shared/types/settings";
+import type { OcrCredentialSettingKey } from "../../../shared/types/settings";
 import type { OcrInvoiceResponse } from "../infrastructure/normalizeInvoice";
 
 export type OcrProviderId = "baidu" | "tencent";
@@ -6,7 +6,7 @@ export type OcrProviderId = "baidu" | "tencent";
 export type OcrProviderField = {
   id: string;
   label: string;
-  settingKey: SettingsKey;
+  settingKey: OcrCredentialSettingKey;
 };
 
 export type OcrProviderCredentials = Record<string, string>;

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
 import type { WorkspaceFieldDefinition } from "../../../shared/types/workspaceField";
+import { createEmptyConditionGroup } from "../../../shared/types/filterGroup";
 import { buildWorkspaceRowStates } from "./workspaceRowState";
 import { buildDashboardWidgetViewModel, createDashboardDocument, ensureDashboardDocumentDefaults } from "./dashboardDocumentModel";
 
@@ -119,7 +120,7 @@ describe("dashboardDocumentModel", () => {
 
   test("builds metric, bar, pie, and kanban widget view models from one dashboard document", () => {
     const rowStates = buildWorkspaceRowStates(rows, fields);
-    const root = { id: "root", kind: "group", mode: "all", children: [] } as const;
+    const root = createEmptyConditionGroup("root");
 
     const metric = buildDashboardWidgetViewModel(rowStates, fields, {
       id: "metric-1",

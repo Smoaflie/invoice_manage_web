@@ -14,6 +14,7 @@ const DASHBOARD_WIDGET_DEFAULT_SPANS: Record<DashboardWidgetType, { colSpan: 1 |
   pie_chart: { colSpan: 2, rowSpan: 1 },
   kanban: { colSpan: 2, rowSpan: 2 },
 };
+const DEFAULT_METRIC_WIDGET_METRICS: Array<"row_count" | "total_amount" | "tax_amount"> = ["row_count", "total_amount", "tax_amount"];
 
 type DashboardMetricWidgetViewModel = {
   id: string;
@@ -127,7 +128,7 @@ function createDefaultSummaryWidget() {
     id: DEFAULT_DASHBOARD_SUMMARY_WIDGET_ID,
     type: "metric" as const,
     title: DEFAULT_DASHBOARD_SUMMARY_WIDGET_TITLE,
-    metrics: ["row_count", "total_amount", "tax_amount"] as const,
+    metrics: [...DEFAULT_METRIC_WIDGET_METRICS],
     conditions: createEmptyConditionGroup("dashboard-widget-total-summary"),
   };
 }
@@ -203,7 +204,7 @@ export function appendDashboardWidget(
           id: widgetId,
           type: "metric" as const,
           title: createDashboardWidgetTitle(widgetType, widgetIndex),
-          metrics: ["row_count", "total_amount", "tax_amount"] as const,
+          metrics: [...DEFAULT_METRIC_WIDGET_METRICS],
           conditions: createEmptyConditionGroup(`dashboard-widget-${widgetId}`),
         }
       : widgetType === "bar_chart"

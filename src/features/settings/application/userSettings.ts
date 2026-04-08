@@ -9,7 +9,7 @@ function normalizeUserName(value: string | null | undefined) {
 
 export async function loadUserNameSetting() {
   const storedValue = await appDb.settings.get("app.userName");
-  return normalizeUserName(storedValue?.value);
+  return normalizeUserName(typeof storedValue?.value === "string" ? storedValue.value : null);
 }
 
 export async function saveUserNameSetting(userName: string, now: () => string) {

@@ -10,14 +10,14 @@ export type ReferenceInvoiceWorkspaceProps = {
   invoiceDocuments: InvoiceDocument[];
   message: string;
   onSidebarStatusChange?: (status: DashboardSidebarStatus) => void;
-  onSelectView?: (view: WorkspaceView) => void;
+  onSelectView?: (view: Exclude<DashboardView, "settings">) => void;
   onOpenDetails: (invoiceDocumentId: string) => void;
   onEdit: (invoiceDocumentId: string) => void;
   onOpenPdf: (invoiceDocumentId: string) => void | Promise<void>;
   onExportMergedPdf?: (invoiceDocumentIds: string[]) => void | Promise<void>;
   onExportZip?: (invoiceDocumentIds: string[], bundleNamingMode: InvoiceBundleNamingMode) => void | Promise<void>;
   onDelete: (invoiceDocumentIds: string[]) => void | Promise<void>;
-  onReparseSingle: (invoiceDocumentId: string) => void | Promise<void>;
+  onReparseSingle?: (invoiceDocumentId: string) => void | Promise<void>;
   onBulkReparse: (invoiceDocumentIds: string[]) => void | Promise<void>;
   onRefresh: () => void | Promise<void>;
 };

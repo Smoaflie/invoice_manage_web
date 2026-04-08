@@ -1,8 +1,8 @@
-import type { DashboardView } from "../../dashboard/ui/Dashboard";
 import type { WorkspaceFieldDefinition } from "../../../shared/types/workspaceField";
+import type { WorkspaceView } from "./referenceWorkspaceController.shared";
 
 type WorkspaceToolbarProps = {
-  view: Exclude<DashboardView, "settings">;
+  view: WorkspaceView;
   totalCount: number;
   resultCount: number;
   selectedCount: number;
@@ -14,15 +14,13 @@ type WorkspaceToolbarProps = {
   sortDirection: "asc" | "desc";
   groupByFieldId: string;
   kanbanFieldId: string;
-  analyticsFieldId: string;
   activeFilterCount: number;
   onSearchTextChange: (value: string) => void;
   onSortFieldChange: (value: string) => void;
   onSortDirectionChange: (value: "asc" | "desc") => void;
   onGroupByFieldChange: (value: string) => void;
   onKanbanFieldChange: (value: string) => void;
-  onAnalyticsFieldChange: (value: string) => void;
-  onSelectView?: (view: Exclude<DashboardView, "settings">) => void;
+  onSelectView?: (view: WorkspaceView) => void;
   onOpenFilter: () => void;
   onOpenFieldConfig: () => void;
   onImportFiles: () => void | Promise<void>;
@@ -30,10 +28,10 @@ type WorkspaceToolbarProps = {
   onReparseSelected: () => void;
 };
 
-const VIEW_OPTIONS: Array<{ id: Exclude<DashboardView, "settings">; label: string }> = [
+const VIEW_OPTIONS: Array<{ id: WorkspaceView; label: string }> = [
   { id: "records", label: "表格视图" },
   { id: "kanban", label: "看板" },
-  { id: "analytics", label: "统计" },
+  { id: "dashboard", label: "仪表盘" },
 ];
 
 export function WorkspaceToolbar(props: WorkspaceToolbarProps) {
@@ -134,18 +132,6 @@ export function WorkspaceToolbar(props: WorkspaceToolbarProps) {
           </label>
         ) : null}
 
-        {props.view === "analytics" ? (
-          <label className="workspace-toolbar-shell__select">
-            <span>统计字段</span>
-            <select value={props.analyticsFieldId} onChange={(event) => props.onAnalyticsFieldChange(event.target.value)}>
-              {props.fields.map((field) => (
-                <option key={field.id} value={field.id}>
-                  {field.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
       </div>
 
       <div className="workspace-toolbar-shell__batch">

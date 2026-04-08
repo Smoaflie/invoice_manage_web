@@ -1,5 +1,6 @@
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { appDb } from "../../../shared/db/appDb";
+import { createEmptyConditionGroup } from "../../../shared/types/filterGroup";
 import { exportData } from "./exportData";
 import { clearTransferTables } from "./transferTestUtils";
 
@@ -79,7 +80,9 @@ describe("exportData", () => {
     await appDb.filterGroups.add({
       id: "filter-group-1",
       name: "购买方分组",
-      sortOrder: 1,
+      root: createEmptyConditionGroup("filter-group-1-root"),
+      createdAt: "2026-03-30T00:00:00.000Z",
+      updatedAt: "2026-03-30T00:00:00.000Z",
     });
 
     await appDb.filterGroupRules.add({

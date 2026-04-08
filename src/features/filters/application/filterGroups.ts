@@ -72,6 +72,7 @@ export async function createFilterGroupRule(input: {
     operator: input.operator ?? "regex",
     pattern: input.pattern.trim(),
   };
+  const operator = rule.operator ?? "regex";
 
   await saveFilterGroup({
     id: group.id,
@@ -84,7 +85,7 @@ export async function createFilterGroupRule(input: {
           id: rule.id,
           kind: "field",
           fieldId: input.field,
-          operator: rule.operator === "regex" ? "matches_regex" : rule.operator,
+          operator: operator === "regex" ? "matches_regex" : operator,
           value: rule.pattern,
         },
       ],

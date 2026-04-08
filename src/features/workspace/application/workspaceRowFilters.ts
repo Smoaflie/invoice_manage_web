@@ -101,7 +101,7 @@ function evaluateConditionNode(
   rowState: WorkspaceRowState,
   resolveFilterGroup: (filterGroupId: string) => ConditionGroup | null,
   visitedGroupIds: Set<string>,
-) {
+): boolean {
   if (node.kind === "field") {
     return createWorkspaceFilterMatcher(node)(rowState);
   }
@@ -125,12 +125,12 @@ export function evaluateConditionGroup(
   rowState: WorkspaceRowState,
   resolveFilterGroup: (filterGroupId: string) => ConditionGroup | null = () => null,
   visitedGroupIds = new Set<string>(),
-) {
+): boolean {
   if (root.children.length === 0) {
     return true;
   }
 
-  const results = root.children.map((child) => evaluateConditionNode(child, rowState, resolveFilterGroup, visitedGroupIds));
+  const results: boolean[] = root.children.map((child) => evaluateConditionNode(child, rowState, resolveFilterGroup, visitedGroupIds));
   return root.mode === "any" ? results.some(Boolean) : results.every(Boolean);
 }
 

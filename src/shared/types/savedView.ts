@@ -23,7 +23,7 @@ export type FileSavedViewQuery = {
 };
 
 export type WorkspaceFilterOperator = FieldConditionOperator;
-export type WorkspaceFilter = FieldCondition;
+export type WorkspaceFilter = Pick<FieldCondition, "fieldId" | "operator" | "value">;
 
 export type WorkspaceSorter = {
   fieldId: string;

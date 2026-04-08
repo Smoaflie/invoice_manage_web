@@ -159,7 +159,6 @@ export function Dashboard({ activeView = "records", onSelectView, onSidebarStatu
       if (successMessage) {
         setDashboardMessage(successMessage);
       }
-      return parsedInvoice;
     } catch (error) {
       const message = error instanceof Error ? error.message : "发票识别失败。";
       const failureMessage = statusMessages.failure?.(message);

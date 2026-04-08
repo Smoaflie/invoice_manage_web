@@ -1,12 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { appDb } from "../../../shared/db/appDb";
-import type { SettingsKey } from "../../../shared/types/settings";
+import type { OcrCredentialSettingKey, SettingRecord } from "../../../shared/types/settings";
 import { getAllOcrProviderSettingKeys, getOcrProvider, getOcrProviderOptions, isOcrProviderId } from "../../ocr/providers/registry";
 import type { OcrProviderCredentials, OcrProviderId } from "../../ocr/providers/types";
 
 type OcrSettingsFormState = {
   vendor: OcrProviderId;
-  values: Partial<Record<SettingsKey, string>>;
+  values: Partial<Record<OcrCredentialSettingKey, string>>;
 };
 
 const EMPTY_STATE: OcrSettingsFormState = {
@@ -21,7 +21,7 @@ async function loadOcrSettings(): Promise<OcrSettingsFormState> {
     settings
       .filter((entry): entry is typeof entry & { value: string | null } => typeof entry.value === "string" || entry.value === null)
       .map((entry) => [entry.key, entry.value ?? ""]),
-  ) as Partial<Record<SettingsKey, string>>;
+  ) as Partial<Record<OcrCredentialSettingKey, string>>;
 
   return {
     ...EMPTY_STATE,
@@ -33,23 +33,26 @@ async function loadOcrSettings(): Promise<OcrSettingsFormState> {
 async function saveOcrSettings(state: OcrSettingsFormState, now: () => string) {
   const updatedAt = now();
   const providerSettingKeys = getAllOcrProviderSettingKeys();
+  const settingsToSave: SettingRecord[] = [
+    {
+      key: "ocr.vendor",
+      value: state.vendor || null,
+      updatedAt,
+    },
+    {
+      key: "ocr.enabled",
+      value: true,
+      updatedAt,
+    },
+    ...providerSettingKeys.map((key) => ({
+      key,
+      value: state.values[key] || null,
+      updatedAt,
+    })),
+  ];
 
   await appDb.transaction("rw", appDb.settings, async () => {
-    await Promise.all([
-      appDb.settings.put({
-        key: "ocr.vendor",
-        value: state.vendor || null,
-        updatedAt,
-      }),
-      appDb.settings.put({
-        key: "ocr.enabled",
-        value: true,
-        updatedAt,
-      }),
-      ...providerSettingKeys.map((key) =>
-        appDb.settings.put({ key, value: state.values[key] || null, updatedAt }),
-      ),
-    ]);
+    await Promise.all(settingsToSave.map((setting) => appDb.settings.put(setting)));
   });
 }
 
@@ -98,7 +101,7 @@ export function OcrSettingsForm() {
     }));
   };
 
-  const updateSettingValue = (key: SettingsKey, value: string) => {
+  const updateSettingValue = (key: OcrCredentialSettingKey, value: string) => {
     resetTransientStatus();
     setForm((current) => ({
       ...current,

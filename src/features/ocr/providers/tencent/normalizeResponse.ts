@@ -53,8 +53,10 @@ function readInvoiceData(body: unknown): TencentInvoiceData | null {
     return null;
   }
 
-  if ("MixedInvoiceItems" in response && Array.isArray(response.MixedInvoiceItems)) {
-    for (const item of response.MixedInvoiceItems) {
+  const responseRecord = response as Record<string, unknown>;
+
+  if ("MixedInvoiceItems" in responseRecord && Array.isArray(responseRecord.MixedInvoiceItems)) {
+    for (const item of responseRecord.MixedInvoiceItems) {
       if (typeof item !== "object" || item === null || !("SingleInvoiceInfos" in item)) {
         continue;
       }
@@ -64,6 +66,8 @@ function readInvoiceData(body: unknown): TencentInvoiceData | null {
       if (typeof infos !== "object" || infos === null) {
         continue;
       }
+
+      const infoRecord = infos as Record<string, unknown>;
 
       const infoCandidates = [
         "VatSpecialInvoice",
@@ -76,8 +80,9 @@ function readInvoiceData(body: unknown): TencentInvoiceData | null {
       ] as const;
 
       for (const key of infoCandidates) {
-        if (key in infos && typeof infos[key] === "object" && infos[key] !== null) {
-          return infos[key] as TencentInvoiceData;
+        const candidate = infoRecord[key];
+        if (typeof candidate === "object" && candidate !== null) {
+          return candidate as TencentInvoiceData;
         }
       }
     }
@@ -93,8 +98,9 @@ function readInvoiceData(body: unknown): TencentInvoiceData | null {
   ] as const;
 
   for (const key of candidates) {
-    if (key in response && typeof response[key] === "object" && response[key] !== null) {
-      return response[key] as TencentInvoiceData;
+    const candidate = responseRecord[key];
+    if (typeof candidate === "object" && candidate !== null) {
+      return candidate as TencentInvoiceData;
     }
   }
 

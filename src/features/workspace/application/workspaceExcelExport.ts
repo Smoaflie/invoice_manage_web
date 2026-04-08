@@ -190,7 +190,9 @@ export async function buildWorkspaceExcelExport(input: WorkspaceExcelExportInput
 }
 
 export function triggerWorkspaceExcelDownload(file: WorkspaceExcelExportFile) {
-  const blob = new Blob([file.content], { type: file.mimeType });
+  const blobBytes = new Uint8Array(file.content.byteLength);
+  blobBytes.set(file.content);
+  const blob = new Blob([blobBytes.buffer], { type: file.mimeType });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
 

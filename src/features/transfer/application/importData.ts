@@ -111,7 +111,14 @@ async function parseTransferPayload(payload: unknown): Promise<{
   if ("invoiceDocuments" in (sanitizedPayload as Record<string, unknown>)) {
     const parsed = transferDataSchema.parse(sanitizedPayload);
     return {
-      ...parsed,
+      invoiceDocuments: parsed.invoiceDocuments,
+      invoiceAuditLogs: parsed.invoiceAuditLogs,
+      tagDefinitions: parsed.tagDefinitions,
+      tagGroups: parsed.tagGroups,
+      tagGroupLinks: parsed.tagGroupLinks,
+      filterGroups: parsed.filterGroups as FilterGroup[],
+      filterGroupRules: parsed.filterGroupRules,
+      savedViews: parsed.savedViews as SavedView[],
       settings: parsed.settings.filter((setting) => !WEB_ONLY_OCR_SECRET_KEYS.has(setting.key)),
     };
   }

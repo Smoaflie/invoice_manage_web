@@ -2,6 +2,7 @@ import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { appDb } from "../../../shared/db/appDb";
+import { createEmptyConditionGroup } from "../../../shared/types/filterGroup";
 import { CollaborationWorkspace } from "./CollaborationWorkspace";
 
 describe("CollaborationWorkspace", () => {
@@ -121,8 +122,8 @@ describe("CollaborationWorkspace", () => {
       },
     ]);
     await appDb.filterGroups.bulkAdd([
-      { id: "group-1", name: "Buyer", sortOrder: 1 },
-      { id: "group-2", name: "To Submit", sortOrder: 2 },
+      { id: "group-1", name: "Buyer", root: createEmptyConditionGroup("group-1-root"), createdAt: "2026-04-01T00:00:00.000Z", updatedAt: "2026-04-01T00:00:00.000Z" },
+      { id: "group-2", name: "To Submit", root: createEmptyConditionGroup("group-2-root"), createdAt: "2026-04-01T00:00:00.000Z", updatedAt: "2026-04-01T00:00:00.000Z" },
     ]);
     await appDb.filterGroupRules.bulkAdd([
       { id: "rule-1", groupId: "group-1", label: "INV-001 only", field: "invoiceNumber", pattern: "INV-001" },
@@ -233,7 +234,13 @@ describe("CollaborationWorkspace", () => {
         updatedAt: "2026-04-05T00:00:00.000Z",
       },
     ]);
-    await appDb.filterGroups.add({ id: "group-manual", name: "Manual Group", sortOrder: 1 });
+    await appDb.filterGroups.add({
+      id: "group-manual",
+      name: "Manual Group",
+      root: createEmptyConditionGroup("group-manual-root"),
+      createdAt: "2026-04-05T00:00:00.000Z",
+      updatedAt: "2026-04-05T00:00:00.000Z",
+    });
     await appDb.filterGroupRules.add({ id: "rule-manual", groupId: "group-manual", label: "manual", field: "invoiceNumber", pattern: "INV-MANUAL" });
 
     render(<CollaborationWorkspace />);

@@ -264,7 +264,7 @@ export function useReferenceWorkspaceController(props: ReferenceInvoiceWorkspace
     handleExportMergedPdf: () => void props.onExportMergedPdf?.([...selectedIdSet]),
     handleExportZip: (bundleNamingMode: "invoice_number" | "total_amount") => void props.onExportZip?.([...selectedIdSet], bundleNamingMode),
     handleDeleteSingle: (invoiceDocumentId: string) => void props.onDelete([invoiceDocumentId]),
-    handleReparseSingle: (invoiceDocumentId: string) => void props.onReparseSingle(invoiceDocumentId),
+    handleReparseSingle: (invoiceDocumentId: string) => void props.onReparseSingle?.(invoiceDocumentId),
     handleOpenPdfSingle: (invoiceDocumentId: string) => void props.onOpenPdf(invoiceDocumentId),
     handleToggleGroup: (groupId: string) => setExpandedGroupIds((current) => (current.includes(groupId) ? current.filter((id) => id !== groupId) : [...current, groupId])),
     handleBulkAddTags: () => void handleBulkTagUpdate("add"),

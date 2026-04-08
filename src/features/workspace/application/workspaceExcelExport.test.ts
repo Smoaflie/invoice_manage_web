@@ -71,6 +71,9 @@ const rows: InvoiceDocument[] = [
 function findColumnNumberByHeader(workbook: Workbook, header: string) {
   const worksheet = workbook.getWorksheet(1);
   expect(worksheet).toBeDefined();
+  if (!worksheet) {
+    throw new Error("Missing worksheet");
+  }
 
   for (let columnNumber = 1; columnNumber <= worksheet.columnCount; columnNumber += 1) {
     if (worksheet.getRow(1).getCell(columnNumber).value === header) {
@@ -97,6 +100,9 @@ describe("workspaceExcelExport", () => {
     await workbook.xlsx.load(result.content as never);
     const worksheet = workbook.getWorksheet(1);
     expect(worksheet).toBeDefined();
+    if (!worksheet) {
+      throw new Error("Missing worksheet");
+    }
     expect(workbook.worksheets).toHaveLength(1);
 
     const invoiceNumberColumn = findColumnNumberByHeader(workbook, "发票号码");

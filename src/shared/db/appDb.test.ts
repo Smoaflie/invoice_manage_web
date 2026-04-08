@@ -96,7 +96,9 @@ describe("appDb", () => {
     await appDb.filterGroups.add({
       id: "filter-group-1",
       name: "购买方规则",
-      sortOrder: 1,
+      root: createEmptyConditionGroup("filter-group-1-root"),
+      createdAt: "2026-03-30T00:00:00.000Z",
+      updatedAt: "2026-03-30T00:00:00.000Z",
     });
 
     await appDb.filterGroupRules.add({

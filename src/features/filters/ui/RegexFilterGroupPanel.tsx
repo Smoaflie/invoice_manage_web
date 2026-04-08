@@ -42,7 +42,7 @@ export function RegexFilterGroupPanel() {
       return;
     }
     try {
-      await createFilterGroup(groupName, groups.length + 1);
+      await createFilterGroup(groupName);
       setGroupName("");
       await refresh();
       setStatus("已保存筛选组。");

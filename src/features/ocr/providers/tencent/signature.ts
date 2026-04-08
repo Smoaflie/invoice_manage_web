@@ -1,19 +1,26 @@
 const encoder = new TextEncoder();
 
+function toArrayBuffer(input: string | Uint8Array) {
+  const bytes = typeof input === "string" ? encoder.encode(input) : input;
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
+
 async function sha256Hex(input: string) {
-  const digest = await crypto.subtle.digest("SHA-256", encoder.encode(input));
+  const digest = await crypto.subtle.digest("SHA-256", toArrayBuffer(input));
   return [...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, "0")).join("");
 }
 
 async function hmacSha256(key: string | Uint8Array, message: string) {
   const importedKey = await crypto.subtle.importKey(
     "raw",
-    typeof key === "string" ? encoder.encode(key) : key,
+    toArrayBuffer(key),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign("HMAC", importedKey, encoder.encode(message));
+  const signature = await crypto.subtle.sign("HMAC", importedKey, toArrayBuffer(message));
   return new Uint8Array(signature);
 }
 
