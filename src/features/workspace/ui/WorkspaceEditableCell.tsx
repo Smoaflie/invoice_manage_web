@@ -2,6 +2,7 @@ import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { WorkspaceFieldDefinition } from "../../../shared/types/workspaceField";
+import { formatDisplayDateTime } from "../../../shared/time/formatDisplayTime";
 import { expandedRows } from "./workspaceExpandableText";
 import { useWorkspaceMeasuredTextPreview } from "./useWorkspaceMeasuredTextPreview";
 
@@ -17,6 +18,7 @@ const DETAIL_PANEL_OFFSET = 8;
 const DETAIL_PANEL_MAX_WIDTH = 420;
 const DETAIL_PANEL_MIN_WIDTH = 280;
 const DETAIL_PANEL_VIEWPORT_PADDING = 16;
+const TIMESTAMP_FIELD_IDS = new Set(["lastModified", "ocrParsedAt", "createdAt", "updatedAt"]);
 const HIDDEN_MEASURE_STYLE = {
   position: "fixed",
   top: "-9999px",
@@ -231,7 +233,11 @@ function WorkspaceEditableCellInner({ field, value, columnWidth }: WorkspaceEdit
     );
   }
 
-  const formattedText = hasDisplayText(formattedValue) ? String(formatCellValue(value)) : "";
+  const formattedText = TIMESTAMP_FIELD_IDS.has(field.id)
+    ? formatDisplayDateTime(value)
+    : hasDisplayText(formattedValue)
+      ? String(formatCellValue(value))
+      : "";
 
   return (
     <input

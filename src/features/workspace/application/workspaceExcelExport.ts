@@ -1,6 +1,7 @@
 import { Workbook, type Alignment, type CellValue, type Column } from "exceljs";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
 import type { WorkspaceFieldDefinition } from "../../../shared/types/workspaceField";
+import { formatDisplayDateTime } from "../../../shared/time/formatDisplayTime";
 import { getWorkspaceFieldValue } from "./workspaceValueResolver";
 
 type WorkspaceExcelExportInput = {
@@ -61,18 +62,8 @@ function normalizeTextValue(value: unknown) {
   return String(value ?? "").trim();
 }
 
-function toReadableDate(value: unknown) {
-  const normalized = normalizeTextValue(value);
-  if (normalized.length === 0) {
-    return "";
-  }
-
-  const date = typeof value === "number" ? new Date(value) : new Date(normalized);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return `${date.getUTCFullYear()}/${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
+function toReadableDateTime(value: unknown) {
+  return formatDisplayDateTime(value);
 }
 
 function toCurrencyValue(value: unknown): number | string {
@@ -141,7 +132,7 @@ function buildRowValues(row: InvoiceDocument, columns: ExportColumn[]) {
 
     accumulator[column.id] = normalizeTextValue(rawValue);
     if (column.kind === "timestamp") {
-      accumulator[`${column.id}:readable`] = toReadableDate(rawValue);
+      accumulator[`${column.id}:readable`] = toReadableDateTime(rawValue);
     }
     return accumulator;
   }, {});

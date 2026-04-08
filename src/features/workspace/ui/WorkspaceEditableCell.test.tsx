@@ -215,4 +215,16 @@ describe("WorkspaceEditableCell", () => {
     expect(screen.getByDisplayValue(value)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: value })).toBeNull();
   });
+
+  test("formats timestamp values with the Asia/Shanghai timezone", () => {
+    render(
+      <WorkspaceEditableCell
+        rowId="doc-1"
+        field={{ ...stringField, id: "createdAt", label: "创建时间", type: "number" }}
+        value="2026-03-31T00:00:00.000Z"
+      />,
+    );
+
+    expect(screen.getByDisplayValue("2026/3/31 08:00:00")).toBeInTheDocument();
+  });
 });

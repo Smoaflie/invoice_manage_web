@@ -1,5 +1,6 @@
 import type { InvoiceAuditLog } from "../../../shared/types/invoiceAuditLog";
 import type { InvoiceDocument } from "../../../shared/types/invoiceDocument";
+import { formatDisplayDateTime } from "../../../shared/time/formatDisplayTime";
 import { bindingStatusLabel, conflictStatusLabel, parseStatusLabel } from "../../dashboard/ui/dashboardViewModels";
 
 type InvoiceDetailsDrawerProps = {
@@ -172,7 +173,7 @@ export function InvoiceDetailsDrawer({
               auditLogs.map((log) => (
                 <li key={log.id}>
                   <strong>{formatAuditTitle(log)}</strong>
-                  <span>{log.changedAt}</span>
+                  <span>{formatDisplayDateTime(log.changedAt) || log.changedAt}</span>
                   <p>
                     {formatAuditValue(log, log.beforeValue)} {"->"} {formatAuditValue(log, log.afterValue)}
                   </p>

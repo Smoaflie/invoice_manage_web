@@ -132,12 +132,12 @@ describe("workspaceExcelExport", () => {
 
     expect(worksheet.getCell(2, lastModifiedColumn).value).toBe("1712188800000");
     expect(worksheet.getCell(2, lastModifiedColumn).numFmt).toBe("@");
-    expect(worksheet.getCell(2, lastModifiedReadableColumn).value).toBe("2024/4/4");
+    expect(worksheet.getCell(2, lastModifiedReadableColumn).value).toBe("2024/4/4 08:00:00");
     expect(worksheet.getCell(2, lastModifiedReadableColumn).numFmt).toBe("@");
 
     expect(worksheet.getCell(2, ocrParsedAtColumn).value).toBe("2026-04-04T08:00:00.000Z");
     expect(worksheet.getCell(2, ocrParsedAtColumn).numFmt).toBe("@");
-    expect(worksheet.getCell(2, ocrParsedAtReadableColumn).value).toBe("2026/4/4");
+    expect(worksheet.getCell(2, ocrParsedAtReadableColumn).value).toBe("2026/4/4 16:00:00");
     expect(worksheet.getCell(2, ocrParsedAtReadableColumn).numFmt).toBe("@");
   });
 });
