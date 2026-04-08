@@ -29,6 +29,7 @@ export type ImportDataPayload = {
 export type ImportDataResult = {
   importedInvoiceDocuments: number;
   conflictedInvoiceDocuments: number;
+  conflictedInvoiceDocumentIds: string[];
 };
 
 export type ImportConflictMode = "reject" | "continue_with_conflicts";
@@ -215,5 +216,6 @@ export async function importData(payload: unknown, options: ImportDataOptions = 
   return {
     importedInvoiceDocuments: invoiceDocuments.length,
     conflictedInvoiceDocuments: importPlan.conflictedInvoiceDocuments,
+    conflictedInvoiceDocumentIds: importPlan.conflictedInvoiceDocumentIds,
   };
 }

@@ -322,7 +322,11 @@ describe("InvoiceWorkspace interactions", () => {
     Object.defineProperty(URL, "revokeObjectURL", { value: revokeObjectUrlSpy, configurable: true });
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
     mockedDeps.exportDataMock.mockResolvedValue({ invoiceDocuments: [], exportedAt: "2026-04-01T00:00:00.000Z" });
-    mockedDeps.importDataMock.mockResolvedValue({ importedInvoiceDocuments: 2 });
+    mockedDeps.importDataMock.mockResolvedValue({
+      importedInvoiceDocuments: 2,
+      conflictedInvoiceDocuments: 0,
+      conflictedInvoiceDocumentIds: [],
+    });
 
     renderInvoiceWorkspace({ onRefresh });
 
@@ -349,12 +353,18 @@ describe("InvoiceWorkspace interactions", () => {
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     mockedDeps.importDataMock
       .mockRejectedValueOnce(Object.assign(new Error("conflict"), { name: "ImportConflictError", conflicts: [{ status: "same_number_diff_hash" }] }))
-      .mockResolvedValueOnce({ importedInvoiceDocuments: 1, conflictedInvoiceDocuments: 1 });
+      .mockResolvedValueOnce({
+        importedInvoiceDocuments: 1,
+        conflictedInvoiceDocuments: 1,
+        conflictedInvoiceDocumentIds: ["doc-conflict"],
+      });
 
     renderInvoiceWorkspace({ onRefresh });
 
     const input = document.querySelector('input[type="file"][accept*=".json"]') as HTMLInputElement | null;
     expect(input).toBeTruthy();
+
+    await user.click(await screen.findByRole("checkbox", { name: "选择 INV-001" }));
 
     await user.click(await screen.findByRole("button", { name: "导入数据" }));
 
@@ -365,5 +375,8 @@ describe("InvoiceWorkspace interactions", () => {
     await waitFor(() => expect(confirmSpy).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(mockedDeps.importDataMock).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(onRefresh).toHaveBeenCalledTimes(1));
+    await waitFor(async () =>
+      expect((await appDb.settings.get("ui.workspaceSelectedIds"))?.value).toEqual(["doc-1", "doc-conflict"]),
+    );
   });
 });

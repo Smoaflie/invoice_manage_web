@@ -56,6 +56,10 @@ export function useWorkspaceTransferActions(input: UseWorkspaceTransferActionsIn
         result = await importData(parsedPayload, { conflictMode: "continue_with_conflicts" });
       }
 
+      if (result.conflictedInvoiceDocumentIds.length > 0) {
+        input.setSelectedIdSet((current) => new Set([...current, ...result.conflictedInvoiceDocumentIds]));
+      }
+
       await input.onRefresh();
       input.setWorkspaceMessage(buildImportResultMessage(result));
     } catch (error) {

@@ -59,6 +59,7 @@ describe("importData", () => {
     });
 
     expect(result.importedInvoiceDocuments).toBe(0);
+    expect(result.conflictedInvoiceDocumentIds).toEqual([]);
     expect(await appDb.invoiceDocuments.count()).toBe(1);
     expect(await appDb.filterGroups.count()).toBe(0);
     expect(await appDb.filterGroupRules.count()).toBe(0);
@@ -157,6 +158,7 @@ describe("importData", () => {
     });
 
     expect(result.importedInvoiceDocuments).toBe(1);
+    expect(result.conflictedInvoiceDocumentIds).toEqual([]);
     expect(await appDb.filterGroups.count()).toBe(1);
     expect(await appDb.filterGroupRules.count()).toBe(1);
     expect(await appDb.savedViews.count()).toBe(1);
@@ -280,6 +282,7 @@ describe("importData", () => {
 
     expect(result.importedInvoiceDocuments).toBe(2);
     expect(result.conflictedInvoiceDocuments).toBe(2);
+    expect(result.conflictedInvoiceDocumentIds).toHaveLength(2);
     expect(await appDb.invoiceDocuments.count()).toBe(3);
 
     const importedRows = (await appDb.invoiceDocuments.toArray()).filter((row) => row.id !== "doc-existing");
@@ -287,16 +290,19 @@ describe("importData", () => {
     expect(importedRows).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
+          id: expect.any(String),
           fileName: "same-hash.pdf",
           conflictStatus: "same_hash_diff_invoice_data",
           conflictMessage: expect.stringContaining("existing.pdf"),
         }),
         expect.objectContaining({
+          id: expect.any(String),
           fileName: "same-number.pdf",
           conflictStatus: "same_number_diff_hash",
           conflictMessage: expect.stringContaining("hash-existing"),
         }),
       ]),
     );
+    expect(result.conflictedInvoiceDocumentIds.sort()).toEqual(importedRows.map((row) => row.id).sort());
   });
 });

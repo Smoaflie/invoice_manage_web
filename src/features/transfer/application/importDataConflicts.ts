@@ -36,6 +36,7 @@ export type ImportConflict = {
 export type ImportPlan = {
   conflicts: ImportConflict[];
   conflictedInvoiceDocuments: number;
+  conflictedInvoiceDocumentIds: string[];
   sourceIdToImportedId: Map<string, string>;
   invoiceDocuments: InvoiceDocument[];
 };
@@ -71,22 +72,22 @@ function buildConflictLocator(document: Pick<InvoiceDocument, "fileName" | "cont
   return `${document.fileName} / ${document.contentHash} / 发票号码 ${document.invoiceNumber || "空"}`;
 }
 
-function buildSameHashConflict(imported: ImportedInvoiceDocument, existing: InvoiceDocument): ImportConflict {
+function buildSameHashConflict(importedId: string, imported: ImportedInvoiceDocument, existing: InvoiceDocument): ImportConflict {
   const differingFields = findDifferingInvoiceInfoFields(imported, existing)
     .map((field) => INVOICE_INFO_FIELD_LABELS[field])
     .join("、");
 
   return {
-    importedInvoiceDocumentId: imported.id,
+    importedInvoiceDocumentId: importedId,
     existingInvoiceDocumentId: existing.id,
     status: "same_hash_diff_invoice_data",
     message: `与文件 ${buildConflictLocator(existing)} 冲突：文件内容哈希相同，但除文件名外的发票信息不同（${differingFields}）。`,
   };
 }
 
-function buildSameNumberConflict(imported: ImportedInvoiceDocument, existing: InvoiceDocument): ImportConflict {
+function buildSameNumberConflict(importedId: string, existing: InvoiceDocument): ImportConflict {
   return {
-    importedInvoiceDocumentId: imported.id,
+    importedInvoiceDocumentId: importedId,
     existingInvoiceDocumentId: existing.id,
     status: "same_number_diff_hash",
     message: `与文件 ${buildConflictLocator(existing)} 冲突：发票号码相同，但文件内容哈希不同。`,
@@ -114,6 +115,7 @@ export function buildImportPlan(importedDocuments: ImportedInvoiceDocument[], ex
   const conflicts: ImportConflict[] = [];
   const sourceIdToImportedId = new Map<string, string>();
   const invoiceDocuments: InvoiceDocument[] = [];
+  const conflictedInvoiceDocumentIds: string[] = [];
   let conflictedInvoiceDocuments = 0;
 
   for (const imported of importedDocuments) {
@@ -125,9 +127,10 @@ export function buildImportPlan(importedDocuments: ImportedInvoiceDocument[], ex
 
     const sameHashConflict = sameHashMatches[0];
     if (sameHashConflict) {
-      const conflict = buildSameHashConflict(imported, sameHashConflict);
       const importedId = buildImportedInvoiceDocumentId(imported.id, takenIds);
+      const conflict = buildSameHashConflict(importedId, imported, sameHashConflict);
       conflicts.push(conflict);
+      conflictedInvoiceDocumentIds.push(importedId);
       conflictedInvoiceDocuments += 1;
       sourceIdToImportedId.set(imported.id, importedId);
       invoiceDocuments.push(normalizeImportedInvoiceDocument(imported, importedId, conflict));
@@ -140,9 +143,10 @@ export function buildImportPlan(importedDocuments: ImportedInvoiceDocument[], ex
       : undefined;
 
     if (sameNumberConflict) {
-      const conflict = buildSameNumberConflict(imported, sameNumberConflict);
       const importedId = buildImportedInvoiceDocumentId(imported.id, takenIds);
+      const conflict = buildSameNumberConflict(importedId, sameNumberConflict);
       conflicts.push(conflict);
+      conflictedInvoiceDocumentIds.push(importedId);
       conflictedInvoiceDocuments += 1;
       sourceIdToImportedId.set(imported.id, importedId);
       invoiceDocuments.push(normalizeImportedInvoiceDocument(imported, importedId, conflict));
@@ -157,6 +161,7 @@ export function buildImportPlan(importedDocuments: ImportedInvoiceDocument[], ex
   return {
     conflicts,
     conflictedInvoiceDocuments,
+    conflictedInvoiceDocumentIds,
     sourceIdToImportedId,
     invoiceDocuments,
   };

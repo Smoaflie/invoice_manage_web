@@ -88,6 +88,7 @@ describe("DataTransferPanel", () => {
     importDataMock.mockResolvedValue({
       importedInvoiceDocuments: 1,
       conflictedInvoiceDocuments: 0,
+      conflictedInvoiceDocumentIds: [],
     });
 
     render(<DataTransferPanel onImportComplete={onImportComplete} />);
@@ -139,6 +140,7 @@ describe("DataTransferPanel", () => {
       .mockResolvedValueOnce({
         importedInvoiceDocuments: 1,
         conflictedInvoiceDocuments: 1,
+        conflictedInvoiceDocumentIds: ["doc-conflict"],
       });
 
     render(<DataTransferPanel />);
