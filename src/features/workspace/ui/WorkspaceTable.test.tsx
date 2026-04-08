@@ -431,21 +431,30 @@ describe("WorkspaceTable", () => {
     });
   });
 
-  test("resizes item-details and actions columns through header handles", () => {
+  test("uses the handle before item-details to resize the trailing left column only", () => {
+    const onRecordColumnWidthsChange = vi.fn();
     const onTableColumnWidthsChange = vi.fn();
 
     renderWorkspaceTable({
+      recordColumnWidths: { invoiceNumber: 140, buyerName: 180 },
       tableColumnWidths: { itemDetails: 120, actions: 286 },
+      onRecordColumnWidthsChange,
       onTableColumnWidthsChange,
     });
 
-    fireEvent.mouseDown(screen.getByRole("button", { name: "调整列宽 商品详情" }), { clientX: 420 });
+    const itemDetailsHandle = screen.getByRole("button", { name: "调整列宽 商品详情" });
+
+    fireEvent.mouseDown(itemDetailsHandle, { clientX: 420 });
     fireEvent.mouseMove(window, { clientX: 450 });
     fireEvent.mouseUp(window, { clientX: 450 });
 
+    expect(onRecordColumnWidthsChange).toHaveBeenCalledWith({
+      invoiceNumber: 140,
+      buyerName: 210,
+    });
     expect(onTableColumnWidthsChange).toHaveBeenCalledWith({
-      itemDetails: 150,
-      actions: 256,
+      itemDetails: 120,
+      actions: 286,
     });
   });
 

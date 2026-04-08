@@ -1,7 +1,9 @@
+import { useState, type MouseEvent as ReactMouseEvent } from "react";
 import type { WorkspaceTableColumnWidths } from "../../../shared/types/savedView";
 import type { WorkspaceFieldDefinition } from "../../../shared/types/workspaceField";
 import { useWorkspaceColumnResize } from "./useWorkspaceColumnResize";
-import { ACTIONS_COLUMN_MIN_WIDTH, INDEX_COLUMN_WIDTH, ITEM_DETAILS_COLUMN_MIN_WIDTH, SELECT_COLUMN_WIDTH, cellWidth } from "./workspaceTableLayout";
+import { MIN_COLUMN_WIDTH } from "./workspaceColumnWidths";
+import { INDEX_COLUMN_WIDTH, SELECT_COLUMN_WIDTH, cellWidth } from "./workspaceTableLayout";
 
 type WorkspaceTableHeaderProps = {
   allSelected: boolean;
@@ -14,6 +16,7 @@ type WorkspaceTableHeaderProps = {
 };
 
 export function WorkspaceTableHeader(props: WorkspaceTableHeaderProps) {
+  const [trailingGuideX, setTrailingGuideX] = useState<number | null>(null);
   const { guideX: recordGuideX, startResize } = useWorkspaceColumnResize({
     getWidths: (leftKey, rightKey) => {
       const leftWidth = props.recordColumnWidths[leftKey];
@@ -27,23 +30,33 @@ export function WorkspaceTableHeader(props: WorkspaceTableHeaderProps) {
         [rightKey]: widths.rightWidth,
       }),
   });
-  const { guideX: tableGuideX, startResize: startTableResize } = useWorkspaceColumnResize({
-    getWidths: (leftKey, rightKey) =>
-      leftKey === "itemDetails" && rightKey === "actions"
-        ? {
-            leftWidth: props.tableColumnWidths.itemDetails,
-            rightWidth: props.tableColumnWidths.actions,
-            leftMinWidth: ITEM_DETAILS_COLUMN_MIN_WIDTH,
-            rightMinWidth: ACTIONS_COLUMN_MIN_WIDTH,
-          }
-        : null,
-    onCommit: (_, __, widths) =>
-      props.onTableColumnWidthsChange({
-        itemDetails: widths.leftWidth,
-        actions: widths.rightWidth,
-      }),
-  });
-  const guideX = recordGuideX ?? tableGuideX;
+  const startTrailingResize = (event: ReactMouseEvent<HTMLButtonElement>, fieldId: string, startWidth: number) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const startX = event.clientX;
+    setTrailingGuideX(startX);
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      setTrailingGuideX(moveEvent.clientX);
+    };
+
+    const handleMouseUp = (upEvent: MouseEvent) => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      setTrailingGuideX(null);
+
+      props.onRecordColumnWidthsChange({
+        ...props.recordColumnWidths,
+        [fieldId]: Math.max(Math.round(startWidth + (upEvent.clientX - startX)), MIN_COLUMN_WIDTH),
+      });
+      props.onTableColumnWidthsChange(props.tableColumnWidths);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+  const guideX = recordGuideX ?? trailingGuideX;
 
   return (
     <>
@@ -66,18 +79,19 @@ export function WorkspaceTableHeader(props: WorkspaceTableHeaderProps) {
                   aria-label={`调整列宽 ${field.label}`}
                   onMouseDown={(event) => startResize(event, field.id, nextField.id)}
                 />
+              ) : props.visibleFields.length > 0 ? (
+                <button
+                  type="button"
+                  className="table-column-resize-handle"
+                  aria-label="调整列宽 商品详情"
+                  onMouseDown={(event) => startTrailingResize(event, field.id, props.recordColumnWidths[field.id] ?? field.width)}
+                />
               ) : null}
             </div>
           );
         })}
         <div className="table-cell table-cell--head table-cell--head-resizable table-cell--item-details" style={cellWidth(props.tableColumnWidths.itemDetails)}>
           <span>商品详情</span>
-          <button
-            type="button"
-            className="table-column-resize-handle"
-            aria-label="调整列宽 商品详情"
-            onMouseDown={(event) => startTableResize(event, "itemDetails", "actions")}
-          />
         </div>
         <div className="table-cell table-cell--head table-cell--actions" style={cellWidth(props.tableColumnWidths.actions)}>
           操作
