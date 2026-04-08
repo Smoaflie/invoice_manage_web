@@ -78,6 +78,8 @@ export function getWorkspaceFieldValue(row: InvoiceDocument, field: WorkspaceFie
       return buildItemField(row.items, "tax_rate");
     case "itemTax":
       return buildItemField(row.items, "tax");
+    case "tags":
+      return row.tags;
     default:
       return "";
   }

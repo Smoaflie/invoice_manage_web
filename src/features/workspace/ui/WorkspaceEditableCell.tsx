@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { WorkspaceFieldDefinition } from "../../../shared/types/workspaceField";
 import { formatDisplayDateTime } from "../../../shared/time/formatDisplayTime";
+import { WorkspaceTagCell } from "./WorkspaceTagCell";
 import { expandedRows } from "./workspaceExpandableText";
 import { useWorkspaceMeasuredTextPreview } from "./useWorkspaceMeasuredTextPreview";
 
@@ -164,6 +165,10 @@ function WorkspaceEditableCellInner({ field, value, columnWidth }: WorkspaceEdit
 
   if (field.type === "multi_select") {
     const tags = Array.isArray(formattedValue) ? formattedValue : [];
+    if (field.id === "tags") {
+      return <WorkspaceTagCell label={field.label} tags={tags.map((tag) => String(tag))} columnWidth={columnWidth ?? field.width} />;
+    }
+
     return tags.length > 0 ? (
       <span className="workspace-cell__tags">
         {tags.map((tag) => (

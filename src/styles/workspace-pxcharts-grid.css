@@ -418,6 +418,74 @@ button.table-column-resize-handle:active {
   font-weight: 500;
 }
 
+.workspace-tag-cell {
+  width: 100%;
+}
+
+.workspace-tag-cell__measure {
+  position: fixed;
+  top: -9999px;
+  left: -9999px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.workspace-tag-cell__trigger {
+  display: block;
+  width: 100%;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+}
+
+.workspace-tag-cell__trigger:hover,
+.workspace-tag-cell__trigger:focus {
+  background: #eff6ff;
+}
+
+.workspace-tag-cell__preview,
+.workspace-tag-cell__menu-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.workspace-tag-cell__preview {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.workspace-tag-cell__chip {
+  flex: 0 0 auto;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.workspace-tag-cell__chip--ellipsis {
+  min-width: 34px;
+  justify-content: center;
+}
+
+.workspace-tag-cell__menu {
+  position: fixed;
+  z-index: 40;
+  max-height: min(320px, calc(100vh - 32px));
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+}
+
+.workspace-tag-cell__menu-chip {
+  max-width: 100%;
+}
+
 .task-table-actions {
   gap: 6px;
   flex-wrap: nowrap;

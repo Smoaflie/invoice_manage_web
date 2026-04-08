@@ -46,6 +46,7 @@ const BUILTIN_FIELDS: WorkspaceFieldDefinition[] = [
   { id: "itemAmount", label: "商品金额", source: "builtin", type: "string", options: [], visible: false, width: 160, editable: false },
   { id: "itemTaxRate", label: "商品税率", source: "builtin", type: "string", options: [], visible: false, width: 140, editable: false },
   { id: "itemTax", label: "商品税额", source: "builtin", type: "string", options: [], visible: false, width: 160, editable: false },
+  { id: "tags", label: "标签", source: "builtin", type: "multi_select", options: [], visible: true, width: 180, editable: false },
 ];
 
 function buildGroupTagMap(tagGroupLinks: TagGroupLink[]) {

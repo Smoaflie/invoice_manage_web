@@ -44,6 +44,11 @@ describe("buildWorkspaceFields", () => {
       source: "builtin",
       type: "string",
     });
+    expect(fields.find((field) => field.id === "tags")).toMatchObject({
+      label: "标签",
+      source: "builtin",
+      type: "multi_select",
+    });
     expect(fields.find((field) => field.id === "tag-group:group-period")).toMatchObject({
       options: ["2024年", "2025年"],
       rawOptions: ["时期:2024年", "时期:2025年"],
