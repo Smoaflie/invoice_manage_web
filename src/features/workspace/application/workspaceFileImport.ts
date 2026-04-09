@@ -31,6 +31,12 @@ export async function collectDroppedFiles(dataTransfer: DataTransfer | null): Pr
     return [...pickedFiles.values()];
   }
 
+  const handleLookups: Array<{
+    file: File;
+    key: string;
+    handlePromise: Promise<FileSystemHandle | null>;
+  }> = [];
+
   for (const item of items) {
     if (item.kind !== "file") {
       continue;
@@ -41,8 +47,16 @@ export async function collectDroppedFiles(dataTransfer: DataTransfer | null): Pr
       continue;
     }
 
-    const handle = item.getAsFileSystemHandle ? await item.getAsFileSystemHandle() : null;
-    pickedFiles.set(buildFileKey(file), {
+    handleLookups.push({
+      file,
+      key: buildFileKey(file),
+      handlePromise: item.getAsFileSystemHandle ? item.getAsFileSystemHandle() : Promise.resolve(null),
+    });
+  }
+
+  for (const { file, key, handlePromise } of handleLookups) {
+    const handle = await handlePromise;
+    pickedFiles.set(key, {
       file,
       handle: handle?.kind === "file" ? (handle as FileSystemFileHandle) : null,
     });
