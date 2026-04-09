@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { Plugin, ResolvedConfig } from "vite";
-import { renderOcrProxyScript, renderVercelConfig } from "./buildArtifacts";
+import { renderOcrProxyScript } from "./buildArtifacts";
 
 function resolveBuildOutDir(config: ResolvedConfig) {
   return path.resolve(config.root, config.build.outDir);
@@ -22,11 +22,7 @@ export function ocrProxyArtifactsPlugin(isDemoBuild: boolean): Plugin {
 
       if (isDemoBuild) {
         await rm(path.join(outDir, "ocr-proxy.js"), { force: true });
-        await writeFile(
-          path.join(outDir, "vercel.json"),
-          `${JSON.stringify(renderVercelConfig(), null, 2)}\n`,
-          "utf8",
-        );
+        await rm(path.join(outDir, "vercel.json"), { force: true });
         return;
       }
 
